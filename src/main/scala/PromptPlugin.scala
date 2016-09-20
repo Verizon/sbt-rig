@@ -2,7 +2,23 @@ package verizon.build
 
 import sbt._, Keys._
 
-object prompt {
+object PromptPlugin extends AutoPlugin {
+  override def trigger = allRequirements
+
+  override lazy val projectSettings = Seq(
+    shellPrompt := {
+    state: State =>
+      val extracted = Project.extract(state)
+      import extracted._
+      //get name of current project and construct prompt string
+      (name in currentRef get structure.data).map {
+        name => "[" + cyan(name) + "] λ "
+      }.getOrElse(red("> "))
+    }
+  )
+
+  //////////////////////// INTERNALS ////////////////////////
+
   import scala.Console._
 
   lazy val isANSISupported = {
@@ -21,18 +37,7 @@ object prompt {
   def cyan(str: String) =
     if (isANSISupported) (CYAN + str + RESET)
     else str
-
-  private val prompt = {
-    state: State =>
-      val extracted = Project.extract(state)
-      import extracted._
-      //get name of current project and construct prompt string
-      (name in currentRef get structure.data).map {
-        name => "[" + cyan(name) + "] λ "
-      }.getOrElse("> ")
-  }
-
-  val settings: Seq[Def.Setting[_]] = Seq(
-    shellPrompt := prompt
-  )
 }
+
+
+

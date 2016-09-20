@@ -1,10 +1,38 @@
 package verizon.build
 
 import sbt._, Keys._
+
+object RigPlugin extends AutoPlugin {
+  object autoImport {
+    // general stuff
+    val isTravisBuild     = settingKey[Boolean]("true if this build is running as either a PR or a release build within Travis CI")
+    val isTravisPR        = settingKey[Boolean]("true if the current job is a pull request, false if it’s not a pull request.")
+    val travisRepoSlug    = settingKey[Option[String]]("The slug (in form: owner_name/repo_name) of the repository currently being built")
+    val travisJobNumber   = settingKey[Option[String]]("The number of the current job (for example, 4.1).")
+    val travisBuildNumber = settingKey[Option[String]]("The number of the current build (for example, 4)")
+    val travisCommit      = settingKey[Option[String]]("The commit that the current build is testing")
+    // testing
+    val scalaTestVersion  = SettingKey[String]("scalatest-version")
+    val scalaCheckVersion = SettingKey[String]("scalacheck-version")
+  }
+
+  import autoImport._
+
+  override def trigger = allRequirements
+
+  override def requires =
+    PromptPlugin &&
+    sbtrelease.ReleasePlugin &&
+    scoverage.ScoverageSbtPlugin
+
+  override lazy val projectSettings = common.settings
+}
+
+import sbt._, Keys._
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
 object common {
-  import TravisPlugin.autoImport._
+  import RigPlugin.autoImport._
   import scoverage.ScoverageKeys.{coverageReport,coverageEnabled,coverageHighlighting,coverageMinimum,coverageFailOnMinimum}
 
   def settings =
@@ -12,8 +40,29 @@ object common {
     coverageSettings ++
     testSettings ++
     releaseSettings ++
-    prompt.settings ++
-    publishing.settings
+    publishingSettings ++ Seq(
+      isTravisBuild     := sys.env.get("TRAVIS").isDefined,
+      isTravisPR        := !sys.env.get("TRAVIS_PULL_REQUEST").forall(_.trim.toLowerCase == "false"),
+      travisRepoSlug    := sys.env.get("TRAVIS_REPO_SLUG"),
+      travisJobNumber   := sys.env.get("TRAVIS_JOB_NUMBER"),
+      travisBuildNumber := sys.env.get("TRAVIS_BUILD_NUMBER"),
+      travisCommit      := sys.env.get("TRAVIS_COMMIT")
+    )
+
+  def publishingSettings = Seq(
+    publishMavenStyle := true,
+    pomIncludeRepository := { _ => false },
+    publishArtifact in (Compile, packageBin) := true,
+    publishArtifact in (Compile, packageSrc) := true,
+    publishArtifact in Test := false,
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      if (isSnapshot.value)
+        Some("snapshots" at nexus + "content/repositories/snapshots")
+      else
+        Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    }
+  )
 
   def testSettings = Seq(
     scalaTestVersion     := "2.2.6",
@@ -60,16 +109,9 @@ object common {
           "-Xlint:stars-align"
         )
       }),
-      // Tim P: Removed this because of the tendancy to introduce
-      // issues with the bytecode: https://issues.scala-lang.org/browse/SI-3882
-      // scalacOptions <++= (version) map { v =>
-      //   if (v.endsWith("SNAPSHOT")) Nil else Seq("-optimize")
-      // },
       scalacOptions in Test := (scalacOptions in Compile).value :+ "-language:reflectiveCalls"
     )
   }
-
-  import java.time.Instant
 
   def coverageSettings = Seq(
     coverageFailOnMinimum := false,
@@ -181,10 +223,11 @@ object common {
         inquireVersions,
         setReleaseVersion,
         checkReleaseVersion,
-        tagRelease,
         runTestWithCoverage,
         runPackageBinaries,
-        publishArtifacts
+        tagRelease,
+        ReleaseStep(action = Command.process("publishSigned", _)),
+        ReleaseStep(action = Command.process("sonatypeReleaseAll", _))
       ),
       // only job *.1 pushes tags, to avoid each independent job attempting to retag the same release
       travisJobNumber.value
