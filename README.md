@@ -17,13 +17,11 @@ addSbtPlugin("io.verizon.build" % "sbt-rig" % "1.1.+")
 
 That's all you need to do. The plugin itself makes use of SBT auto-plugins, so you never need to explicitly enable it for the common functionality sbt-rig provides. There are a set of optional modules (see below) that you can explicitly enable for extra functionality.
 
-
-
 If you want to publish to maven central (this plugin assumes you do), then in that case you will need to set the following:
 
 ```
-// this tells sonatype what profile to use 
-// (usually this is what you registered when you signed up 
+// this tells sonatype what profile to use
+// (usually this is what you registered when you signed up
 // for maven central release via their OSS JIRA ticket process)
 sonatypeProfileName := "com.yourdomain"
 
@@ -37,8 +35,8 @@ homepage := Some(url("https://yoursite.com"))
 // show users where the source code is located
 scmInfo := Some(ScmInfo(url("https://github.com/yourorg/yourproj"),
                             "git@github.com:yourorg/yourproj.git"))
-                            
-// inform central who was explicitly involved in developing 
+
+// inform central who was explicitly involved in developing
 // this project. Note that this is *required* by central.
 pomExtra in Global := {
   <developers>
@@ -49,7 +47,7 @@ pomExtra in Global := {
     </developer>
   </developers>
 }
-                            
+
 ```
 
 In addition to the following plugins are provided by `sbt-rig` but are not explicitly enabled by default. These are optional, and you may never use them.
