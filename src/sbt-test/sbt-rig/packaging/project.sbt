@@ -1,10 +1,4 @@
 
-import verizon.build._
-
-common.settings
-
-publishing.ignore
-
 scalaVersion in Global  := "2.11.7"
 
 lazy val root = project.in(file(".")).aggregate(core, http, rpc)
