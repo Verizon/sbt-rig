@@ -17,7 +17,7 @@ addSbtPlugin("io.verizon.build" % "sbt-rig" % "1.1.+")
 
 That's all you need to do. The plugin itself makes use of SBT auto-plugins, so you never need to explicitly enable it for the common functionality sbt-rig provides. There are a set of optional modules (see below) that you can explicitly enable for extra functionality.
 
-If you want to publish to maven central (this plugin assumes you do), then in that case you will need to set the following:
+If you want to publish to maven central (this plugin assumes you do), then the first thing you need to do is configure PGP signing. Under the hood the sbt-rig plugin makes use of sbt-pgp, so please [read the docs](http://www.scala-sbt.org/sbt-pgp/) for that, and once you have a ring setup, configure a `gpg.sbt` in the root of your project. This file *should be added to your gitignore* and you should never, ever check this file in. Once you've done that, to set the following settings in your `build.sbt`:
 
 ```
 // this tells sonatype what profile to use
@@ -49,6 +49,8 @@ pomExtra in Global := {
 }
 
 ```
+
+These values enable your build to meet the maven central requirements for publishing.
 
 In addition to the following plugins are provided by `sbt-rig` but are not explicitly enabled by default. These are optional, and you may never use them.
 
