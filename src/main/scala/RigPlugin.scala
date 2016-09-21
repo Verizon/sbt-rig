@@ -61,7 +61,14 @@ object common {
         Some("snapshots" at nexus + "content/repositories/snapshots")
       else
         Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-    }
+    },
+    credentials ++= (for {
+      username <- sys.env.get("SONATYPE_USERNAME")
+      password <- sys.env.get("SONATYPE_PASSWORD")
+      } yield Credentials(
+        "Sonatype Nexus Repository Manager",
+        "oss.sonatype.org",
+        username, password)).toSeq
   )
 
   def testSettings = Seq(
@@ -208,6 +215,7 @@ object common {
 
   def releaseSettings = Seq(
     releaseCrossBuild := false,
+    releaseVcs := Some(new GitX(baseDirectory.value)), // only work with Git, sorry SVN people.
     releaseVersion := { ver =>
       travisBuildNumber.value.orElse(sys.env.get("BUILD_NUMBER"))
         .map(s => try Option(s.toInt) catch { case _: NumberFormatException => Option.empty[Int] })

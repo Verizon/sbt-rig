@@ -1,8 +1,4 @@
 
-import verizon.build._
-
-// enablePlugins(RigPlugin)
-
 organization := "io.verizon.build"
 
 name := "sbt-rig"
@@ -31,16 +27,20 @@ homepage := Some(url("https://github.com/verizon/sbt-rig"))
 scmInfo := Some(ScmInfo(url("https://github.com/verizon/sbt-rig"),
                             "git@github.com:verizon/sbt-rig.git"))
 
-pomPostProcess := { () }
+// To sync with Maven central, you need to supply the following information:
+pomExtra in Global := {
+  <developers>
+    <developer>
+      <id>timperrett</id>
+      <name>Timothy Perrett</name>
+      <url>github.com/timperrett</url>
+    </developer>
+  </developers>
+}
 
-credentials ++= for {
-  username <- Option(System.getenv().get("SONATYPE_USERNAME"))
-  password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
-} yield Credentials(
-  "Sonatype Nexus Repository Manager",
-  "oss.sonatype.org",
-  username,
-  password)
+sonatypeProfileName := "io.verizon"
+
+pomPostProcess := { identity }
 
 addSbtPlugin("com.github.gseitz" % "sbt-release"   % "1.0.0")
 addSbtPlugin("com.timushev.sbt"  % "sbt-updates"   % "0.1.8")
