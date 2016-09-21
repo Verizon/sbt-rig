@@ -40,8 +40,6 @@ pomExtra in Global := {
 
 sonatypeProfileName := "io.verizon"
 
-pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toArray)
-
 pomPostProcess := { identity }
 
 addSbtPlugin("com.github.gseitz" % "sbt-release"   % "1.0.0")
