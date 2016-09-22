@@ -17,7 +17,9 @@ addSbtPlugin("io.verizon.build" % "sbt-rig" % "1.1.+")
 
 That's all you need to do. The plugin itself makes use of SBT auto-plugins, so you never need to explicitly enable it for the common functionality sbt-rig provides. There are a set of optional modules (see below) that you can explicitly enable for extra functionality.
 
-If you want to publish to maven central (this plugin assumes you do), then the first thing you need to do is configure PGP signing. Under the hood the sbt-rig plugin makes use of sbt-pgp, so please [read the docs](http://www.scala-sbt.org/sbt-pgp/) for that, and once you have a ring setup, configure a `gpg.sbt` in the root of your project. This file *should be added to your gitignore* and you should never, ever check this file in. Once you've done that, to set the following settings in your `build.sbt`:
+### Publishing to Central
+
+If you want to publish to maven central (this plugin assumes you do), then the first thing you need to do is configure PGP signing. Under the hood the sbt-rig plugin makes use of sbt-pgp, so please [read the docs](http://www.scala-sbt.org/sbt-pgp/) for that, and once you have a ring setup, and your GPG ring passphrase is available to SBT (this usually lives in `~/.sbt/0.13/gpg.sbt`), set the following settings in your `build.sbt`:
 
 ```
 // this tells sonatype what profile to use
@@ -27,7 +29,6 @@ sonatypeProfileName := "com.yourdomain"
 
 // what license are you releasing this under?
 licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html"))
-
 
 // where can users find information about this project?
 homepage := Some(url("https://yoursite.com"))
@@ -50,7 +51,28 @@ pomExtra in Global := {
 
 ```
 
-These values enable your build to meet the maven central requirements for publishing.
+These values enable your build to meet the maven central requirements for publishing. All artifacts must be signed using your registered GPG keyring.
+
+### Reporting Code Coverage
+
+By default, when building on Travis `sbt-rig` will conduct two passes of compilation: one with code coverage enabled (making use of [scoverage](https://github.com/scoverage/sbt-scoverage)) and another without instrumentation so that the byte code in the output JARs is free of any scoverage plumbing. In order to report on this code coverage, all you need to do is add the following to your `.travis.yml`:
+
+```
+after_success:
+  - "bash <(curl -s https://codecov.io/bash) -r $TRAVIS_REPO_SLUG -t $CODECOV_TOKEN"
+
+``` 
+
+This assumes that you have fetched your codecov report token and encrypted it into your `.travis.yml`. This is usually done on the command line inside your project, something like this:
+
+```
+travis encrypt --add CODECOV_TOKEN=XXXXXXXXXXXX
+```
+
+That's it. Codecov.io will now display the code coverage reports for you, and comment on your pull requests with deltas in coverage values.
+
+
+### Optional Plugins
 
 In addition to the following plugins are provided by `sbt-rig` but are not explicitly enabled by default. These are optional, and you may never use them.
 
