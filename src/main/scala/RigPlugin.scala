@@ -22,6 +22,7 @@ object RigPlugin extends AutoPlugin {
 
   override def requires =
     PromptPlugin &&
+    xerial.sbt.Sonatype &&
     sbtrelease.ReleasePlugin &&
     scoverage.ScoverageSbtPlugin
 
