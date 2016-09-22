@@ -20,36 +20,44 @@ That's all you need to do. The plugin itself makes use of SBT auto-plugins, so y
 
 ### Publishing to Central
 
-If you want to publish to maven central (this plugin assumes you do), then the first thing you need to do is configure PGP signing. Under the hood the sbt-rig plugin makes use of sbt-pgp, so please [read the docs](http://www.scala-sbt.org/sbt-pgp/) for that, and once you have a ring setup, and your GPG ring passphrase is available to SBT (this usually lives in `~/.sbt/0.13/gpg.sbt`), set the following settings in your `build.sbt`:
+If you want to publish to maven central (this plugin assumes you do), then the first thing you need to do is configure PGP signing. Under the hood the sbt-rig plugin makes use of sbt-pgp, so please [read the docs](http://www.scala-sbt.org/sbt-pgp/) for that, and once you have a ring setup, and your GPG ring passphrase is available to SBT (this usually lives in `~/.sbt/0.13/gpg.sbt`), set the following settings in `project/CentralRequirementsPlugin.scala`:
 
 ```
-// this tells sonatype what profile to use
-// (usually this is what you registered when you signed up
-// for maven central release via their OSS JIRA ticket process)
-sonatypeProfileName := "com.yourdomain"
+import sbt._, Keys._
+import xerial.sbt.Sonatype.autoImport.sonatypeProfileName
 
-// what license are you releasing this under?
-licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html"))
+object CentralRequirementsPlugin extends AutoPlugin {
+  // tells sbt to automatically enable this plugin where ever 
+  // the sbt-rig plugin is enabled (which should be all sub-modules)
+  override def trigger = allRequirements
 
-// where can users find information about this project?
-homepage := Some(url("https://yoursite.com"))
+  override def requires = RigPlugin
 
-// show users where the source code is located
-scmInfo := Some(ScmInfo(url("https://github.com/yourorg/yourproj"),
-                            "git@github.com:yourorg/yourproj.git"))
-
-// inform central who was explicitly involved in developing
-// this project. Note that this is *required* by central.
-pomExtra in Global := {
-  <developers>
-    <developer>
-      <id>timperrett</id>
-      <name>Timothy Perrett</name>
-      <url>github.com/timperrett</url>
-    </developer>
-  </developers>
+  override lazy val projectSettings = Seq(
+    // this tells sonatype what profile to use
+    // (usually this is what you registered when you signed up
+    // for maven central release via their OSS JIRA ticket process)
+    sonatypeProfileName := "com.yourdomain",
+    // inform central who was explicitly involved in developing
+    // this project. Note that this is *required* by central.
+    pomExtra in Global := {
+      <developers>
+        <developer>
+          <id>timperrett</id>
+          <name>Timothy Perrett</name>
+          <url>http://github.com/timperrett</url>
+        </developer>
+      </developers>
+    },
+    // what license are you releasing this under?
+    licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+    // where can users find information about this project?
+    homepage := Some(url("http://verizon.github.io/quiver/")),
+    // show users where the source code is located
+    scmInfo := Some(ScmInfo(url("https://github.com/yourorg/yourproj"),
+                                "git@github.com:yourorg/yourproj.git"))
+  )
 }
-
 ```
 
 These values enable your build to meet the maven central requirements for publishing. All artifacts must be signed using your registered GPG keyring.
