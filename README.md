@@ -27,7 +27,7 @@ import sbt._, Keys._
 import xerial.sbt.Sonatype.autoImport.sonatypeProfileName
 
 object CentralRequirementsPlugin extends AutoPlugin {
-  // tells sbt to automatically enable this plugin where ever 
+  // tells sbt to automatically enable this plugin where ever
   // the sbt-rig plugin is enabled (which should be all sub-modules)
   override def trigger = allRequirements
 
@@ -70,7 +70,7 @@ By default, when building on Travis `sbt-rig` will conduct two passes of compila
 after_success:
   - "bash <(curl -s https://codecov.io/bash) -r $TRAVIS_REPO_SLUG -t $CODECOV_TOKEN"
 
-``` 
+```
 
 This assumes that you have fetched your codecov report token and encrypted it into your `.travis.yml`. This is usually done on the command line inside your project, something like this:
 
@@ -80,6 +80,17 @@ travis encrypt --add CODECOV_TOKEN=XXXXXXXXXXXX
 
 That's it. Codecov.io will now display the code coverage reports for you, and comment on your pull requests with deltas in coverage values.
 
+### Disabling Code Coverage
+
+Sometimes you might have modules that you simply do not want code coverage reporting enabled on, and in this case you can simply add the following setting to that particular `build.sbt`:
+
+```
+coverageEnabled := false
+```
+
+By default the plugin detects if the build is running on travis-ci and enables the coverage during the first compilation pass, and disables it on the second pass.
+
+If you find yourself having problems with the coverage implementation (this sometimes happens) then be sure to read the [scoverage troubleshooting guide](https://github.com/scoverage/sbt-scoverage#exclude-classes-and-packages).
 
 ### Optional Plugins
 
@@ -96,6 +107,10 @@ In addition to the following plugins are provided by `sbt-rig` but are not expli
     <tr>
       <td><code>enablePlugins(Specs2Plugin)</code></td>
       <td>Add support for using the compatible version of Specs2 in your test scope</td>
+    </tr>
+    <tr>
+      <td><code>enablePlugins(DisablePublishingPlugin)</code></td>
+      <td>Disables all the artifact publishing for that particular module - no documentation, no binaries, no pos etc</td>
     </tr>
   </tbody>
 </table>

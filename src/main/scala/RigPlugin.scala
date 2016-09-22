@@ -93,7 +93,8 @@ object common {
       "-Ywarn-dead-code",
       "-Ywarn-inaccessible",
       "-Xfatal-warnings",
-      "-Xfuture"
+      "-Xfuture",
+      "-Xmax-classfile-name", (255 - 15).toString
     )
 
     Seq(
