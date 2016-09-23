@@ -217,7 +217,10 @@ object common {
     state3
   })
 
+  import com.typesafe.sbt.SbtPgp.autoImport._, PgpKeys._
+
   def releaseSettings = Seq(
+    releasePublishArtifactsAction := publishSigned.value,
     releaseCrossBuild := false,
     releaseVcs := Some(new GitX(baseDirectory.value)), // only work with Git, sorry SVN people.
     releaseVersion := { ver =>
@@ -237,9 +240,9 @@ object common {
         checkReleaseVersion,
         runTestWithCoverage,
         ReleaseStep(action = Command.process("coverageOff", _)),
-        runPackageBinaries,
+        publishArtifacts,
         tagRelease,
-        ReleaseStep(action = Command.process("publishSigned", _)),
+        // ReleaseStep(action = Command.process("publishSigned", _)),
         ReleaseStep(action = Command.process("sonatypeReleaseAll", _))
       ),
       // only job *.1 pushes tags, to avoid each independent job attempting to retag the same release
