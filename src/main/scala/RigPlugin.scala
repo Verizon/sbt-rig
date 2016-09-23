@@ -123,6 +123,8 @@ object common {
   }
 
   def coverageSettings = Seq(
+    /* don't delete the coverage data, so we have it to upload later */
+    // cleanKeepFiles += crossTarget.value / "scoverage-data",
     coverageFailOnMinimum := false,
     coverageEnabled := {
       /* if we're running on travis, use coverage, don't otherwise */
@@ -234,6 +236,7 @@ object common {
         setReleaseVersion,
         checkReleaseVersion,
         runTestWithCoverage,
+        ReleaseStep(action = Command.process("coverageOff", _)),
         runPackageBinaries,
         tagRelease,
         ReleaseStep(action = Command.process("publishSigned", _)),
