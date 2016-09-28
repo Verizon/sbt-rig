@@ -241,10 +241,11 @@ object common {
         checkReleaseVersion,
         tagRelease,
         runTest,
+        ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value}", _))
         // ReleaseStep(action = Command.process("coverageOff", _)),
         publishArtifacts,
         // ReleaseStep(action = Command.process("publishSigned", _)),
-        ReleaseStep(action = Command.process("sonatypeReleaseAll", _))
+        ReleaseStep(action = Command.process("sonatypeRelease", _))
       ),
       // only job *.1 pushes tags, to avoid each independent job attempting to retag the same release
       travisJobNumber.value
