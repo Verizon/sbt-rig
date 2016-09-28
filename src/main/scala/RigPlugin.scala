@@ -199,6 +199,12 @@ object common {
   val runPackageBinaries = ReleaseStep(action = state1 => {
     val ex1 = Project.extract(state1)
     val thisRef = ex1.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
+    // println("A. >>>>>>>>>>>> " + (version in ThisBuild).get(ex1.structure.data))
+    // println("A.scala >>>>>>>>>>>> " + (scalaVersion in Global).get(ex1.structure.data))
+
+    // ex1.structure.allProjectRefs.foreach { proj =>
+    //   println("A1. >>>>>>>>>>>> " + (coverageEnabled in proj).get(ex1.structure.data))
+    // }
 
     // this is a total hack, and only works because version in ThisBuild is
     // the only thing we're changing outside of the reloaded state. This is
@@ -211,9 +217,16 @@ object common {
 
     val newState = ex1.append(updatedSettings, state1)
     val ex2 = Project.extract(newState)
+    // println("B. >>>>>>>>>>>> " + (version in ThisBuild).get(ex2.structure.data))
+    // println("B.scala >>>>>>>>>>>> " + (scalaVersion in Global).get(ex2.structure.data))
+    // ex2.structure.allProjectRefs.foreach { proj =>
+    //   println("B1. >>>>>>>>>>>> " + (coverageEnabled in proj).get(ex2.structure.data))
+    // }
 
     val state3 = releaseStepTaskAggregated((packageBin in Compile) in thisRef)(newState)
     val ex3 = Project.extract(state3)
+    // println("C. >>>>>>>>>>>> " + (version in ThisBuild).get(ex3.structure.data))
+    // println("C.scala >>>>>>>>>>>> " + (scalaVersion in Global).get(ex3.structure.data))
 
     state3
   })
@@ -241,10 +254,12 @@ object common {
         checkReleaseVersion,
         tagRelease,
         runTest,
-        ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value}", _)),
-        // ReleaseStep(action = Command.process("coverageOff", _)),
+        // ReleaseStep(action = Command.process("show version", _)),
+        runPackageBinaries,
         publishArtifacts,
-        // ReleaseStep(action = Command.process("publishSigned", _)),
+        // ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value.getOrElse("unknown")}-${travisJobNumber.value.getOrElse("0.0")}", _)),
+        // ReleaseStep(action = Command.process("show version", _)),
+        // ReleaseStep(action = Command.process("publishSigned", _)) //,
         ReleaseStep(action = Command.process("sonatypeRelease", _))
       ),
       // only job *.1 pushes tags, to avoid each independent job attempting to retag the same release
