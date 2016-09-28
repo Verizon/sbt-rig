@@ -241,7 +241,7 @@ object common {
         checkReleaseVersion,
         tagRelease,
         runTest,
-        ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value}", _))
+        ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value}", _)),
         // ReleaseStep(action = Command.process("coverageOff", _)),
         publishArtifacts,
         // ReleaseStep(action = Command.process("publishSigned", _)),
