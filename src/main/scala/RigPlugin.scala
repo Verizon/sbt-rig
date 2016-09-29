@@ -199,9 +199,9 @@ object common {
   val runPackageBinaries = ReleaseStep(action = state1 => {
     val ex1 = Project.extract(state1)
     val thisRef = ex1.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
-    println("A. >>>>>>>>>>>> " + (version in ThisBuild).get(ex1.structure.data))
-    println("A.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex1.structure.data))
-    println("A.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex1.structure.data))
+    // println("A. >>>>>>>>>>>> " + (version in ThisBuild).get(ex1.structure.data))
+    // println("A.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex1.structure.data))
+    // println("A.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex1.structure.data))
 
     // ex1.structure.allProjectRefs.foreach { proj =>
     //   println("A1. >>>>>>>>>>>> " + (coverageEnabled in proj).get(ex1.structure.data))
@@ -219,18 +219,18 @@ object common {
 
     val newState = ex1.append(updatedSettings, state1)
     val ex2 = Project.extract(newState)
-    println("B. >>>>>>>>>>>> " + (version in ThisBuild).get(ex2.structure.data))
-    println("B.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
-    println("B.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex2.structure.data))
+    // println("B. >>>>>>>>>>>> " + (version in ThisBuild).get(ex2.structure.data))
+    // println("B.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
+    // println("B.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex2.structure.data))
     // ex2.structure.allProjectRefs.foreach { proj =>
     //   println("B1. >>>>>>>>>>>> " + (coverageEnabled in proj).get(ex2.structure.data))
     // }
 
     val state3 = releaseStepTaskAggregated((packageBin in Compile) in thisRef)(newState)
     val ex3 = Project.extract(state3)
-    println("C. >>>>>>>>>>>> " + (version in ThisBuild).get(ex3.structure.data))
-    println("C.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex3.structure.data))
-    println("C.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex3.structure.data))
+    // println("C. >>>>>>>>>>>> " + (version in ThisBuild).get(ex3.structure.data))
+    // println("C.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex3.structure.data))
+    // println("C.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex3.structure.data))
 
     state3
   })
@@ -238,8 +238,14 @@ object common {
   val useTravisScalaVersion = ReleaseStep(action = state1 => {
     val ex1 = Project.extract(state1)
     val thisRef = ex1.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
+
+    val verfun = (releaseVersion in thisRef).get(ex1.structure.data).get
+
     val updatedSettings =
-      ex1.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex1.structure.data).get) ++ Seq(
+      ex1.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex1.structure.data).get) ++
+      // ex1.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex1.structure.data).get) ++
+      Seq(
+        version in ThisBuild := verfun((version in ThisBuild).get(ex1.structure.data).get),
         scalaVersion := sys.env.get("TRAVIS_SCALA_VERSION").getOrElse((scalaVersion in thisRef).get(ex1.structure.data).get)//,
         // publishTo := (publishTo in thisRef).get(ex1.structure.data).get
       )
@@ -247,11 +253,11 @@ object common {
     val state2 = ex1.append(updatedSettings, state1)
     val ex2 = Project.extract(state2)
 
-    println("X. >>>>>>>>>>>> " + (version in ThisBuild).get(ex2.structure.data))
-    println("X.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
-    ex2.structure.allProjectRefs.foreach { proj =>
-      println("X.publishTo >>>>>>>>>>>> " + (publishTo in proj).get(ex2.structure.data).get)
-    }
+    // println("X. >>>>>>>>>>>> " +  verfun((version in ThisBuild).get(ex2.structure.data).get))
+    // println("X.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
+    // ex2.structure.allProjectRefs.foreach { proj =>
+    //   println("X.publishTo >>>>>>>>>>>> " + (publishTo in proj).get(ex2.structure.data).get)
+    // }
 
     state2
   })
@@ -283,12 +289,16 @@ object common {
         tagRelease,
         runTest,
         runPackageBinaries,
+        // ReleaseStep(action = Command.process("show version", _)),
         // ReleaseStep(action = Command.process("show publishTo", _)),
         // ReleaseStep(action = Command.process("show scalaVersion", _)),
         ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value.getOrElse("unknown")}-${travisJobNumber.value.getOrElse("0.0")}", _)),
+        // setReleaseVersion,
+        // ReleaseStep(action = Command.process("show version", _)),
         // ReleaseStep(action = Command.process(s"show sonatypeStagingRepositoryProfile", _)),
         // ReleaseStep(action = Command.process("show publishTo", _)),
         useTravisScalaVersion, // terrible hack. `sonatypeOpen` seems to blow away `scalaVersion`
+        // ReleaseStep(action = Command.process("show version", _)),
         // ReleaseStep(action = Command.process("show publishTo", _)),
         // ReleaseStep(action = Command.process("show scalaVersion", _)),
         publishArtifacts,
