@@ -199,8 +199,9 @@ object common {
   val runPackageBinaries = ReleaseStep(action = state1 => {
     val ex1 = Project.extract(state1)
     val thisRef = ex1.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
-    // println("A. >>>>>>>>>>>> " + (version in ThisBuild).get(ex1.structure.data))
-    // println("A.scala >>>>>>>>>>>> " + (scalaVersion in Global).get(ex1.structure.data))
+    println("A. >>>>>>>>>>>> " + (version in ThisBuild).get(ex1.structure.data))
+    println("A.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex1.structure.data))
+    println("A.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex1.structure.data))
 
     // ex1.structure.allProjectRefs.foreach { proj =>
     //   println("A1. >>>>>>>>>>>> " + (coverageEnabled in proj).get(ex1.structure.data))
@@ -212,28 +213,54 @@ object common {
     val updatedSettings = ex1.structure.allProjectRefs.map(proj
       => coverageEnabled in proj := false) ++ Seq(
       version in ThisBuild := (version in ThisBuild).get(ex1.structure.data).get,
-      scalaVersion in Global := (scalaVersion in thisRef).get(ex1.structure.data).get
+      scalaVersion := (scalaVersion in thisRef).get(ex1.structure.data).get,
+      publishTo := (publishTo in thisRef).get(ex1.structure.data).get
     )
 
     val newState = ex1.append(updatedSettings, state1)
     val ex2 = Project.extract(newState)
-    // println("B. >>>>>>>>>>>> " + (version in ThisBuild).get(ex2.structure.data))
-    // println("B.scala >>>>>>>>>>>> " + (scalaVersion in Global).get(ex2.structure.data))
+    println("B. >>>>>>>>>>>> " + (version in ThisBuild).get(ex2.structure.data))
+    println("B.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
+    println("B.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex2.structure.data))
     // ex2.structure.allProjectRefs.foreach { proj =>
     //   println("B1. >>>>>>>>>>>> " + (coverageEnabled in proj).get(ex2.structure.data))
     // }
 
     val state3 = releaseStepTaskAggregated((packageBin in Compile) in thisRef)(newState)
     val ex3 = Project.extract(state3)
-    // println("C. >>>>>>>>>>>> " + (version in ThisBuild).get(ex3.structure.data))
-    // println("C.scala >>>>>>>>>>>> " + (scalaVersion in Global).get(ex3.structure.data))
+    println("C. >>>>>>>>>>>> " + (version in ThisBuild).get(ex3.structure.data))
+    println("C.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex3.structure.data))
+    println("C.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex3.structure.data))
 
     state3
   })
 
+  val useTravisScalaVersion = ReleaseStep(action = state1 => {
+    val ex1 = Project.extract(state1)
+    val thisRef = ex1.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
+    val updatedSettings =
+      ex1.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex1.structure.data).get) ++ Seq(
+        scalaVersion := sys.env.get("TRAVIS_SCALA_VERSION").getOrElse((scalaVersion in thisRef).get(ex1.structure.data).get)//,
+        // publishTo := (publishTo in thisRef).get(ex1.structure.data).get
+      )
+
+    val state2 = ex1.append(updatedSettings, state1)
+    val ex2 = Project.extract(state2)
+
+    println("X. >>>>>>>>>>>> " + (version in ThisBuild).get(ex2.structure.data))
+    println("X.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
+    ex2.structure.allProjectRefs.foreach { proj =>
+      println("X.publishTo >>>>>>>>>>>> " + (publishTo in proj).get(ex2.structure.data).get)
+    }
+
+    state2
+  })
+
   import com.typesafe.sbt.SbtPgp.autoImport._, PgpKeys._
+  import xerial.sbt.Sonatype, Sonatype.autoImport._
 
   def releaseSettings = Seq(
+    sonatypeStagingRepositoryProfile := Sonatype.StagingRepositoryProfile("unknown","unknown","unknown","unknown","unknown"),
     releasePublishArtifactsAction := publishSigned.value,
     releaseCrossBuild := false,
     releaseVcs := Some(new GitX(baseDirectory.value)), // only work with Git, sorry SVN people.
@@ -249,18 +276,23 @@ object common {
       Seq(
         checkEnvironment(travisRepoSlug.value, travisBuildNumber.value),
         checkSnapshotDependencies,
+        // ReleaseStep(action = Command.process("show scalaVersion", _)),
         inquireVersions,
         setReleaseVersion,
         checkReleaseVersion,
         tagRelease,
         runTest,
-        // ReleaseStep(action = Command.process("show version", _)),
         runPackageBinaries,
+        // ReleaseStep(action = Command.process("show publishTo", _)),
+        // ReleaseStep(action = Command.process("show scalaVersion", _)),
+        ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value.getOrElse("unknown")}-${travisJobNumber.value.getOrElse("0.0")}", _)),
+        // ReleaseStep(action = Command.process(s"show sonatypeStagingRepositoryProfile", _)),
+        // ReleaseStep(action = Command.process("show publishTo", _)),
+        useTravisScalaVersion, // terrible hack. `sonatypeOpen` seems to blow away `scalaVersion`
+        // ReleaseStep(action = Command.process("show publishTo", _)),
+        // ReleaseStep(action = Command.process("show scalaVersion", _)),
         publishArtifacts,
-        // ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value.getOrElse("unknown")}-${travisJobNumber.value.getOrElse("0.0")}", _)),
-        // ReleaseStep(action = Command.process("show version", _)),
-        // ReleaseStep(action = Command.process("publishSigned", _)) //,
-        ReleaseStep(action = Command.process("sonatypeRelease", _))
+        ReleaseStep(action = Command.process(s"sonatypeRelease ${sonatypeStagingRepositoryProfile.value.repositoryId}", _))
       ),
       // only job *.1 pushes tags, to avoid each independent job attempting to retag the same release
       travisJobNumber.value
