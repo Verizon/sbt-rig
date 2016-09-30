@@ -114,3 +114,4 @@ In addition to the following plugins are provided by `sbt-rig` but are not expli
     </tr>
   </tbody>
 </table>
+
