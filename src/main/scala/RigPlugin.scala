@@ -35,6 +35,7 @@ import scala.xml.transform.{RewriteRule, RuleTransformer}
 object common {
   import RigPlugin.autoImport._
   import scoverage.ScoverageKeys.{coverageReport,coverageEnabled,coverageHighlighting,coverageMinimum,coverageFailOnMinimum}
+  import xerial.sbt.Sonatype, Sonatype.autoImport._
 
   def settings =
     compilationSettings ++
@@ -239,21 +240,22 @@ object common {
     val ex1 = Project.extract(state1)
     val thisRef = ex1.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
 
+    // TIM: This is so fucking hacky words cannot even begin to explain.
     val verfun = (releaseVersion in thisRef).get(ex1.structure.data).get
 
     val updatedSettings =
       ex1.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex1.structure.data).get) ++
-      // ex1.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex1.structure.data).get) ++
       Seq(
         version in ThisBuild := verfun((version in ThisBuild).get(ex1.structure.data).get),
-        scalaVersion := sys.env.get("TRAVIS_SCALA_VERSION").getOrElse((scalaVersion in thisRef).get(ex1.structure.data).get)//,
-        // publishTo := (publishTo in thisRef).get(ex1.structure.data).get
+        scalaVersion := sys.env.get("TRAVIS_SCALA_VERSION").getOrElse((scalaVersion in thisRef).get(ex1.structure.data).get),
+        sonatypeStagingRepositoryProfile := (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get
       )
 
     val state2 = ex1.append(updatedSettings, state1)
     val ex2 = Project.extract(state2)
 
     // println("X. >>>>>>>>>>>> " +  verfun((version in ThisBuild).get(ex2.structure.data).get))
+    // println("X.sonatypeRepo >>>>>>>>>>>> " +  (sonatypeStagingRepositoryProfile in thisRef).get(ex2.structure.data).get)
     // println("X.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
     // ex2.structure.allProjectRefs.foreach { proj =>
     //   println("X.publishTo >>>>>>>>>>>> " + (publishTo in proj).get(ex2.structure.data).get)
@@ -263,7 +265,6 @@ object common {
   })
 
   import com.typesafe.sbt.SbtPgp.autoImport._, PgpKeys._
-  import xerial.sbt.Sonatype, Sonatype.autoImport._
 
   def releaseSettings = Seq(
     sonatypeStagingRepositoryProfile := Sonatype.StagingRepositoryProfile("unknown","unknown","unknown","unknown","unknown"),
@@ -302,6 +303,7 @@ object common {
         // ReleaseStep(action = Command.process("show publishTo", _)),
         // ReleaseStep(action = Command.process("show scalaVersion", _)),
         publishArtifacts,
+        // ReleaseStep(action = Command.process("show sonatypeStagingRepositoryProfile", _))
         ReleaseStep(action = Command.process(s"sonatypeRelease ${sonatypeStagingRepositoryProfile.value.repositoryId}", _))
       ),
       // only job *.1 pushes tags, to avoid each independent job attempting to retag the same release
