@@ -10,6 +10,8 @@ This plugin does all the rigging and fiddly bits and bobs that the typical open 
 
 ## Usage
 
+Before looking over the items below, you might find it useful to read [this article](http://timperrett.com/2016/10/02/continuous-delivery-for-scala-with-travisci/) which explains the rational of sbt-rig, and common setup instructions for users.
+
 In your `project/plugins.sbt`:
 
 ```
