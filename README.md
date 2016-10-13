@@ -24,7 +24,7 @@ That's all you need to do. The plugin itself makes use of SBT auto-plugins, so y
 
 If you want to publish to maven central (this plugin assumes you do), then the first thing you need to do is configure PGP signing. Under the hood the sbt-rig plugin makes use of sbt-pgp, so please [read the docs](http://www.scala-sbt.org/sbt-pgp/) for that, and once you have a ring setup, and your GPG ring passphrase is available to SBT (this usually lives in `~/.sbt/0.13/gpg.sbt`), set the following settings in `project/CentralRequirementsPlugin.scala`:
 
-```
+```scala
 import sbt._, Keys._
 import xerial.sbt.Sonatype.autoImport.sonatypeProfileName
 
@@ -42,15 +42,7 @@ object CentralRequirementsPlugin extends AutoPlugin {
     sonatypeProfileName := "com.yourdomain",
     // inform central who was explicitly involved in developing
     // this project. Note that this is *required* by central.
-    pomExtra in Global := {
-      <developers>
-        <developer>
-          <id>timperrett</id>
-          <name>Timothy Perrett</name>
-          <url>http://github.com/timperrett</url>
-        </developer>
-      </developers>
-    },
+    developers += Developer("timperrett", "Timothy Perrett", "", url("http://github.com/timperrett"))
     // what license are you releasing this under?
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     // where can users find information about this project?
