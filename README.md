@@ -1,5 +1,7 @@
 # sbt-rig
 
+![sbt-rig](docs/img/logo.png)
+
 [![Build Status](https://travis-ci.org/Verizon/sbt-rig.svg?branch=master)](https://travis-ci.org/Verizon/sbt-rig)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.verizon.build/sbt-rig/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.verizon.build/sbt-rig)
 
