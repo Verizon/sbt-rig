@@ -90,8 +90,8 @@ object common {
   )
 
   def testSettings = Seq(
-    scalaTestVersion     := "2.2.6",
-    scalaCheckVersion    := "1.12.5",
+    scalaTestVersion     := "3.0.1",
+    scalaCheckVersion    := "1.12.6",
     libraryDependencies ++= Seq(
       "org.scalatest"  %% "scalatest"  % scalaTestVersion.value  % "test",
       "org.scalacheck" %% "scalacheck" % scalaCheckVersion.value % "test"
@@ -133,7 +133,7 @@ object common {
           "-Xlint:package-object-classes",
           "-Xlint:unsound-match",
           "-Xlint:stars-align"
-        )
+        ) ++ (if(n >= 12) {Seq("-Ypartial-unification")} else Seq())
       }),
       scalacOptions in Test := (scalacOptions in Compile).value :+ "-language:reflectiveCalls"
     )
