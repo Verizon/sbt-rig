@@ -133,7 +133,13 @@ object common {
           "-Xlint:package-object-classes",
           "-Xlint:unsound-match",
           "-Xlint:stars-align"
-        ) ++ (if(n >= 12) {Seq("-Ypartial-unification")} else Seq())
+        ) ++ (
+          if(n >= 12) {
+            Seq("-Ypartial-unification")
+          } else {
+            Seq()
+          }
+        )
       }),
       scalacOptions in Test := (scalacOptions in Compile).value :+ "-language:reflectiveCalls"
     )
