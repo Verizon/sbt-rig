@@ -91,7 +91,7 @@ object common {
 
   def testSettings = Seq(
     scalaTestVersion     := "3.0.1",
-    scalaCheckVersion    := "1.12.6",
+    scalaCheckVersion    := "1.13.4",
     libraryDependencies ++= Seq(
       "org.scalatest"  %% "scalatest"  % scalaTestVersion.value  % "test",
       "org.scalacheck" %% "scalacheck" % scalaCheckVersion.value % "test"
