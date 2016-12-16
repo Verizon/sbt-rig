@@ -1,0 +1,6 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>foo-bar_2.11</artifactId>
+  <version>1.0-scalaz-7.2-SNAPSHOT</version>
+</project>
