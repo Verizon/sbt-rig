@@ -197,7 +197,7 @@ object common {
       val rf = extracted.get(releaseVersion)
       val actualVersion = rf(v)
       Version(actualVersion).filter(v =>
-        v.qualifier.forall(_.isEmpty) && v.minor.isDefined && v.bugfix.isDefined
+        v.qualifier.forall(_.isEmpty) && v.subversions.size == 2
       ).getOrElse(sys.error(s"version $v does not match the expected pattern of x.y.z where x, y, and z are all integers."))
       st
   })
@@ -307,8 +307,11 @@ object common {
     releaseVcs := Some(new GitX(baseDirectory.value)), // only work with Git, sorry SVN people.
     releaseVersion := { ver =>
       travisBuildNumber.value.orElse(sys.env.get("BUILD_NUMBER"))
-        .map(s => try Option(s.toInt) catch { case _: NumberFormatException => Option.empty[Int] })
-        .flatMap(ci => Version(ver).map(_.withoutQualifier.copy(bugfix = ci).string))
+        .flatMap(s => try Option(s.toInt) catch { case _: NumberFormatException => Option.empty[Int] })
+        .flatMap(ci => Version(ver).map { v =>
+          val subversions = v.subversions.take(1) :+ ci
+          v.copy(subversions = subversions, qualifier = None).string
+        })
         .orElse(Version(ver).map(_.withoutQualifier.string))
         .getOrElse(versionFormatError)
     },
