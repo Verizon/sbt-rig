@@ -41,7 +41,7 @@ sonatypeProfileName := "io.verizon"
 
 pomPostProcess := { identity }
 
-addSbtPlugin("com.github.gseitz" % "sbt-release"   % "1.0.0")
+addSbtPlugin("com.github.gseitz" % "sbt-release"   % "1.0.4")
 addSbtPlugin("com.timushev.sbt"  % "sbt-updates"   % "0.1.8")
 addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo" % "0.5.0")
 addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "1.5.0")
