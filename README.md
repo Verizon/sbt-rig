@@ -44,7 +44,7 @@ object CentralRequirementsPlugin extends AutoPlugin {
     sonatypeProfileName := "com.yourdomain",
     // inform central who was explicitly involved in developing
     // this project. Note that this is *required* by central.
-    developers += Developer("timperrett", "Timothy Perrett", "", url("http://github.com/timperrett"))
+    developers += Developer("timperrett", "Timothy Perrett", "", url("http://github.com/timperrett")),
     // what license are you releasing this under?
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     // where can users find information about this project?
