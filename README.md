@@ -35,7 +35,7 @@ object CentralRequirementsPlugin extends AutoPlugin {
   // the sbt-rig plugin is enabled (which should be all sub-modules)
   override def trigger = allRequirements
 
-  override def requires = RigPlugin
+  override def requires = verizon.build.RigPlugin
 
   override lazy val projectSettings = Seq(
     // this tells sonatype what profile to use
