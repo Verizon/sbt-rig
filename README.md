@@ -35,7 +35,7 @@ object CentralRequirementsPlugin extends AutoPlugin {
   // the sbt-rig plugin is enabled (which should be all sub-modules)
   override def trigger = allRequirements
 
-  override def requires = RigPlugin
+  override def requires = verizon.build.RigPlugin
 
   override lazy val projectSettings = Seq(
     // this tells sonatype what profile to use
@@ -44,7 +44,7 @@ object CentralRequirementsPlugin extends AutoPlugin {
     sonatypeProfileName := "com.yourdomain",
     // inform central who was explicitly involved in developing
     // this project. Note that this is *required* by central.
-    developers += Developer("timperrett", "Timothy Perrett", "", url("http://github.com/timperrett"))
+    developers += Developer("timperrett", "Timothy Perrett", "", url("http://github.com/timperrett")),
     // what license are you releasing this under?
     licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     // where can users find information about this project?
