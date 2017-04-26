@@ -112,6 +112,10 @@ In addition to the following plugins are provided by `sbt-rig` but are not expli
       <td><code>enablePlugins(MetadataPlugin)</code></td>
       <td>Generates a `BuildInfo` source file that your system can use to determine the build version of this system at runtime.</td>
     </tr>
+    <tr>
+      <td><code>enablePlugins(DocsPlugin)</code></td>
+      <td>Should only be included in your docs project.  Generates your site with tut and Hugo and publishes to GitHub Pages.</td>
+    </tr>
   </tbody>
 </table>
 
