@@ -108,6 +108,10 @@ In addition to the following plugins are provided by `sbt-rig` but are not expli
       <td><code>enablePlugins(DisablePublishingPlugin)</code></td>
       <td>Disables all the artifact publishing for that particular module - no documentation, no binaries, no pos etc</td>
     </tr>
+    <tr>
+      <td><code>enablePlugins(MetadataPlugin)</code></td>
+      <td>Generates a `BuildInfo` source file that your system can use to determine the build version of this system at runtime.</td>
+    </tr>
   </tbody>
 </table>
 
