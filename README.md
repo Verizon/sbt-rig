@@ -17,7 +17,7 @@ Before looking over the items below, you might find it useful to read [this arti
 In your `project/plugins.sbt`:
 
 ```
-addSbtPlugin("io.verizon.build" % "sbt-rig" % "1.1.+")
+addSbtPlugin("io.verizon.build" % "sbt-rig" % "3.0.+")
 ```
 
 That's all you need to do. The plugin itself makes use of SBT auto-plugins, so you never need to explicitly enable it for the common functionality sbt-rig provides. There are a set of optional modules (see below) that you can explicitly enable for extra functionality.
@@ -101,8 +101,16 @@ In addition to the following plugins are provided by `sbt-rig` but are not expli
   </thead>
   <tbody>
     <tr>
+      <td><code>enablePlugins(ScalaCheckPlugin)</code></td>
+      <td>Add support for a compatible version of ScalaCheck to your test scope.</td>
+    </tr>
+    <tr>
+      <td><code>enablePlugins(ScalaTestPlugin)</code></td>
+      <td>Add support for a compatible version of ScalaTest to your test scope.  Enables <code>ScalaCheckPlugin</code>.</td>
+    </tr>
+    <tr>
       <td><code>enablePlugins(Specs2Plugin)</code></td>
-      <td>Add support for using the compatible version of Specs2 in your test scope</td>
+      <td>Add support for a compatible version of ScalaTest to your test scope.  Enables <code>Specs2Plugin</code>.</td>
     </tr>
     <tr>
       <td><code>enablePlugins(DisablePublishingPlugin)</code></td>

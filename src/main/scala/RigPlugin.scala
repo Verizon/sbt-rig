@@ -27,9 +27,6 @@ object RigPlugin extends AutoPlugin {
     val travisJobNumber   = settingKey[Option[String]]("The number of the current job (for example, 4.1).")
     val travisBuildNumber = settingKey[Option[String]]("The number of the current build (for example, 4)")
     val travisCommit      = settingKey[Option[String]]("The commit that the current build is testing")
-    // testing
-    val scalaTestVersion  = SettingKey[String]("scalatest-version")
-    val scalaCheckVersion = SettingKey[String]("scalacheck-version")
   }
 
   import autoImport._
@@ -56,7 +53,6 @@ object common {
   def settings =
     compilationSettings ++
     coverageSettings ++
-    testSettings ++
     releaseSettings ++
     publishingSettings ++ Seq(
       isTravisBuild     := sys.env.get("TRAVIS").isDefined,
@@ -87,15 +83,6 @@ object common {
         "Sonatype Nexus Repository Manager",
         "oss.sonatype.org",
         username, password)).toSeq
-  )
-
-  def testSettings = Seq(
-    scalaTestVersion     := "3.0.1",
-    scalaCheckVersion    := "1.13.4",
-    libraryDependencies ++= Seq(
-      "org.scalatest"  %% "scalatest"  % scalaTestVersion.value  % "test",
-      "org.scalacheck" %% "scalacheck" % scalaCheckVersion.value % "test"
-    )
   )
 
   def compilationSettings = {
