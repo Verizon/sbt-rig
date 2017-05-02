@@ -138,8 +138,7 @@ object common {
     coverageFailOnMinimum := false,
     coverageEnabled := {
       /* if we're running on travis, use coverage, don't otherwise */
-      // isTravisBuild.value
-      false // make coverage opt-in
+      isTravisBuild.value
     },
     coverageHighlighting := {
       isTravisBuild.value && scalaVersion.value.startsWith("2.11")
