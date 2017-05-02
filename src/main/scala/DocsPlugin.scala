@@ -22,6 +22,7 @@ object DocsPlugin extends AutoPlugin { self =>
     RigPlugin &&
     DisablePublishingPlugin &&
     com.typesafe.sbt.site.SitePlugin &&
+    com.typesafe.sbt.sbtghpages.GhpagesPlugin &&
     com.typesafe.sbt.site.hugo.HugoPlugin &&
     sbtunidoc.ScalaUnidocPlugin
 
