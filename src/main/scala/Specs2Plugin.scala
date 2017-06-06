@@ -27,14 +27,15 @@ object Specs2Plugin extends AutoPlugin {
 
   override def trigger = noTrigger
 
-  override lazy val projectSettings = Seq(
-    specs2version := "3.6.1",
-    libraryDependencies <++= (specs2version) { v =>
-      Seq(
-        "org.specs2" %% "specs2-core" % v % "test",
-        "org.specs2" %% "specs2-junit" % v % "test"
-      )
-    },
-    testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "junitxml", "console")
-  )
+  override lazy val projectSettings = {
+    val specs2V = "3.9.0"
+    Seq(
+      specs2version := specs2V,
+      libraryDependencies ++= Seq(
+        "org.specs2" %% "specs2-core" % specs2V % "test",
+        "org.specs2" %% "specs2-junit" % specs2V % "test"
+      ),
+      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "junitxml", "console")
+    )
+  }
 }
