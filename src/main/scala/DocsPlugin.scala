@@ -24,7 +24,8 @@ object DocsPlugin extends AutoPlugin { self =>
     com.typesafe.sbt.site.SitePlugin &&
     com.typesafe.sbt.sbtghpages.GhpagesPlugin &&
     com.typesafe.sbt.site.hugo.HugoPlugin &&
-    sbtunidoc.ScalaUnidocPlugin
+    sbtunidoc.ScalaUnidocPlugin &&
+    tut.TutPlugin
 
   override lazy val projectSettings = self.settings
 
@@ -41,7 +42,7 @@ object DocsPlugin extends AutoPlugin { self =>
   // release
   import sbtrelease.ReleasePlugin.autoImport._
   // tut
-  import tut.Plugin.{tut, tutSettings, tutSourceDirectory, tutTargetDirectory}
+  import tut.TutPlugin.autoImport._
   // rig
   import RigPlugin.autoImport._
   import scoverage.ScoverageKeys.coverageEnabled
@@ -51,7 +52,6 @@ object DocsPlugin extends AutoPlugin { self =>
    * specific module of your project.
    */
   def settings =
-    tutSettings ++
     Seq(
       coverageEnabled := false,
       gitRemoteHost := "github.com",
