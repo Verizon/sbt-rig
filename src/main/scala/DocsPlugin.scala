@@ -82,8 +82,8 @@ object DocsPlugin extends AutoPlugin { self =>
           overwrite = false,
           preserveLastModified = true)
       },
-      copySiteToStage <<= copySiteToStage.dependsOn(tut),
-      makeSite <<= makeSite.dependsOn(copySiteToStage),
+      copySiteToStage := copySiteToStage.dependsOn(tut).value,
+      makeSite := makeSite.dependsOn(copySiteToStage).value,
       tutSourceDirectory := sourceDirectory.value / "tut",
       // all .md|markdown files go into `content` dir for hugo processing
       tutTargetDirectory := siteStageDirectory.value / "content",
@@ -95,7 +95,7 @@ object DocsPlugin extends AutoPlugin { self =>
         if (sys.env.get("TRAVIS_JOB_NUMBER").exists(_.endsWith(".1"))) Def.task(ghpagesPushSite.value)
         else Def.task(())
       }.value,
-      ghpagesPushSite <<= ghpagesPushSite.dependsOn(makeSite),
+      ghpagesPushSite := ghpagesPushSite.dependsOn(makeSite).value,
       // unidoc settings
       siteUnidocPath := "api",
       autoAPIMappings := true,
