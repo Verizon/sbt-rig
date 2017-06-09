@@ -5,26 +5,26 @@
 [![Build Status](https://travis-ci.org/Verizon/sbt-rig.svg?branch=master)](https://travis-ci.org/Verizon/sbt-rig)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.verizon.build/sbt-rig/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.verizon.build/sbt-rig)
 
-This plugin does all the rigging and fiddly bits and bobs that the typical open source users wants when releasing their software for others. The following assumptions are made:
+This plugin does all the rigging and fiddly bits and bobs that the typical open source user wants when releasing software. The following assumptions are made:
 
 1. You want to do continuous integration and release, and you'll be using [travis-ci.org](https://travis-ci.org) to do this.
-1. You'll be releasing to oss.sonatype.org, and that you already claimed your top-level profile name in maven central. See [this sonatype docs for information](http://central.sonatype.org/pages/ossrh-guide.html) on that.
+1. You'll be releasing to oss.sonatype.org, and that you already claimed your top-level profile name in Maven Central. See the [Sonatype docs](http://central.sonatype.org/pages/ossrh-guide.html) for more.
 
 ## Usage
 
-Before looking over the items below, you might find it useful to read [this article](http://timperrett.com/2016/10/02/continuous-delivery-for-scala-with-travisci/) which explains the rational of sbt-rig, and common setup instructions for users.
+Before looking over the items below, you might find it useful to read [this article](http://timperrett.com/2016/10/02/continuous-delivery-for-scala-with-travisci/) which explains the rationale of sbt-rig, and common setup instructions for users.
 
 In your `project/plugins.sbt`:
 
 ```
-addSbtPlugin("io.verizon.build" % "sbt-rig" % "1.1.+")
+addSbtPlugin("io.verizon.build" % "sbt-rig" % "3.0.+")
 ```
 
 That's all you need to do. The plugin itself makes use of SBT auto-plugins, so you never need to explicitly enable it for the common functionality sbt-rig provides. There are a set of optional modules (see below) that you can explicitly enable for extra functionality.
 
 ### Publishing to Central
 
-If you want to publish to maven central (this plugin assumes you do), then the first thing you need to do is configure PGP signing. Under the hood the sbt-rig plugin makes use of sbt-pgp, so please [read the docs](http://www.scala-sbt.org/sbt-pgp/) for that, and once you have a ring setup, and your GPG ring passphrase is available to SBT (this usually lives in `~/.sbt/0.13/gpg.sbt`), set the following settings in `project/CentralRequirementsPlugin.scala`:
+If you want to publish to Maven Central (this plugin assumes you do), then the first thing you need to do is configure PGP signing. Under the hood the sbt-rig plugin makes use of sbt-pgp, so please [read the docs](http://www.scala-sbt.org/sbt-pgp/) for that, and once you have a ring setup, and your GPG ring passphrase is available to SBT (this usually lives in `~/.sbt/0.13/gpg.sbt`), set the following settings in `project/CentralRequirementsPlugin.scala`:
 
 ```scala
 import sbt._, Keys._
@@ -56,7 +56,7 @@ object CentralRequirementsPlugin extends AutoPlugin {
 }
 ```
 
-These values enable your build to meet the maven central requirements for publishing. All artifacts must be signed using your registered GPG keyring.
+These values enable your build to meet the Maven Central requirements for publishing. All artifacts must be signed using your registered GPG keyring.
 
 ### Reporting Code Coverage
 
@@ -84,13 +84,13 @@ Sometimes you might have modules that you simply do not want code coverage repor
 coverageEnabled := false
 ```
 
-By default the plugin detects if the build is running on travis-ci and enables the coverage during the first compilation pass, and disables it on the second pass.
+By default, the plugin detects if the build is running on Travis CI and enables the coverage during the first compilation pass, and disables it on the second pass.
 
 If you find yourself having problems with the coverage implementation (this sometimes happens) then be sure to read the [scoverage troubleshooting guide](https://github.com/scoverage/sbt-scoverage#exclude-classes-and-packages).
 
 ### Optional Plugins
 
-In addition to the following plugins are provided by `sbt-rig` but are not explicitly enabled by default. These are optional, and you may never use them.
+In addition, the following plugins are provided by `sbt-rig`, but are not explicitly enabled by default. These are optional, and you might never use them.
 
 <table>
   <thead>
@@ -101,12 +101,28 @@ In addition to the following plugins are provided by `sbt-rig` but are not expli
   </thead>
   <tbody>
     <tr>
+      <td><code>enablePlugins(ScalaCheckPlugin)</code></td>
+      <td>Add support for a compatible version of ScalaCheck to your test scope.</td>
+    </tr>
+    <tr>
+      <td><code>enablePlugins(ScalaTestPlugin)</code></td>
+      <td>Add support for a compatible version of ScalaTest to your test scope.  Enables <code>ScalaCheckPlugin</code>.</td>
+    </tr>
+    <tr>
       <td><code>enablePlugins(Specs2Plugin)</code></td>
-      <td>Add support for using the compatible version of Specs2 in your test scope</td>
+      <td>Add support for a compatible version of ScalaTest to your test scope.  Enables <code>Specs2Plugin</code>.</td>
     </tr>
     <tr>
       <td><code>enablePlugins(DisablePublishingPlugin)</code></td>
       <td>Disables all the artifact publishing for that particular module - no documentation, no binaries, no pos etc</td>
+    </tr>
+    <tr>
+      <td><code>enablePlugins(MetadataPlugin)</code></td>
+      <td>Generates a `BuildInfo` source file that your system can use to determine the build version of this system at runtime.</td>
+    </tr>
+    <tr>
+      <td><code>enablePlugins(DocsPlugin)</code></td>
+      <td>Should only be included in your docs project.  Generates your site with tut and Hugo and publishes to GitHub Pages.</td>
     </tr>
   </tbody>
 </table>

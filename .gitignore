@@ -13,3 +13,4 @@ project/boot/
 project/plugins/project/
 .DS_Store
 gpg.sbt
+.idea/

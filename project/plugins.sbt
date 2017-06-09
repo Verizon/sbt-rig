@@ -1,6 +1,6 @@
 
-libraryDependencies <+= (sbtVersion) { sv =>
-  "org.scala-sbt" % "scripted-plugin" % sv
-}
+libraryDependencies ++= Seq(
+  "org.scala-sbt" % "scripted-plugin" % sbtVersion.value
+)
 
-addSbtPlugin("io.verizon.build" % "sbt-rig" % "1.1.20")
+addSbtPlugin("io.verizon.build" % "sbt-rig" % "2.0.30")

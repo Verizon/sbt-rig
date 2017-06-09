@@ -1,5 +1,5 @@
 //: ----------------------------------------------------------------------------
-//: Copyright (C) 2016 Verizon.  All Rights Reserved.
+//: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //:
 //:   Licensed under the Apache License, Version 2.0 (the "License");
 //:   you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package verizon.build
 
 import sbt._, Keys._
 
-object Specs2Plugin extends AutoPlugin {
+object ScalaTestPlugin extends AutoPlugin {
   object autoImport {
-    val specs2version = SettingKey[String]("specs2-version")
+    val scalaTestVersion  = SettingKey[String]("scalatest-version")
   }
 
   import autoImport._
@@ -30,15 +30,10 @@ object Specs2Plugin extends AutoPlugin {
 
   override def trigger = noTrigger
 
-  override lazy val projectSettings = {
-    val specs2V = "3.9.0"
-    Seq(
-      specs2version := specs2V,
-      libraryDependencies ++= Seq(
-        "org.specs2" %% "specs2-core" % specs2V % "test",
-        "org.specs2" %% "specs2-junit" % specs2V % "test"
-      ),
-      testOptions in Test += Tests.Argument(TestFrameworks.Specs2, "junitxml", "console")
+  override lazy val projectSettings = Seq(
+    scalaTestVersion := "3.0.3",
+    libraryDependencies ++= Seq(
+      "org.scalatest"  %% "scalatest"  % scalaTestVersion.value  % "test"
     )
-  }
+  )
 }
