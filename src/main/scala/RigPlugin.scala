@@ -180,12 +180,12 @@ object common {
     check = { st =>
       val extracted = Project.extract(st)
       val v = extracted.get(Keys.version)
-      val (st2, rf) = extracted.runTask(releaseVersion, st)
+      val rf = extracted.get(releaseVersion)
       val actualVersion = rf(v)
       Version(actualVersion).filter(v =>
         v.qualifier.forall(_.isEmpty) && v.subversions.size == 2
       ).getOrElse(sys.error(s"version $v does not match the expected pattern of x.y.z where x, y, and z are all integers."))
-      st2
+      st
   })
 
   val runTestWithCoverage = ReleaseStep(action = state1 => {
@@ -250,19 +250,20 @@ object common {
 
     // println("X1.sonatypeRepo >>>>>>>>>>>> " +  (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get.repositoryId)
 
-    val (state2, verfun) = ex1.runTask(releaseVersion in thisRef, state1)
-    val ex2 = Project.extract(state2)
+
+    // TIM: This is so fucking hacky words cannot even begin to explain.
+    val verfun = (releaseVersion in thisRef).get(ex1.structure.data).get
 
     val updatedSettings =
-      ex2.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex2.structure.data).get) ++
-      ex2.structure.allProjectRefs.map(proj => sonatypeStagingRepositoryProfile in proj := (sonatypeStagingRepositoryProfile in thisRef).get(ex2.structure.data).get) ++
+      ex1.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex1.structure.data).get) ++
+      ex1.structure.allProjectRefs.map(proj => sonatypeStagingRepositoryProfile in proj := (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get) ++
       Seq(
-        version in ThisBuild := verfun((version in ThisBuild).get(ex2.structure.data).get),
-        scalaVersion := sys.env.get("TRAVIS_SCALA_VERSION").getOrElse((scalaVersion in thisRef).get(ex2.structure.data).get)
+        version in ThisBuild := verfun((version in ThisBuild).get(ex1.structure.data).get),
+        scalaVersion := sys.env.get("TRAVIS_SCALA_VERSION").getOrElse((scalaVersion in thisRef).get(ex1.structure.data).get)
       )
 
-    val state3 = ex2.append(updatedSettings, state2)
-    val ex3 = Project.extract(state3)
+    val state2 = ex1.append(updatedSettings, state1)
+    val ex2 = Project.extract(state2)
 
     // println("X. >>>>>>>>>>>> " +  verfun((version in ThisBuild).get(ex2.structure.data).get))
     // println("X2.sonatypeRepo >>>>>>>>>>>> " +  (sonatypeStagingRepositoryProfile in thisRef).get(ex2.structure.data).get.repositoryId)
@@ -271,7 +272,7 @@ object common {
     //   println("X.publishTo >>>>>>>>>>>> " + (publishTo in proj).get(ex2.structure.data).get)
     // }
 
-    state3
+    state2
   })
 
   val releaseAndClose = ReleaseStep(action = state1 => {
