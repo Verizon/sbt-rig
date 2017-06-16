@@ -75,7 +75,11 @@ object DocsPlugin extends AutoPlugin { self =>
       githubRepoName := repoFromSlug.map(_.name).getOrElse("test"),
       baseURL in Hugo := {
         if(isTravisBuild.value){
-          new URI(s"https://${gitRemoteHost.value}/pages/${githubOrg.value}/${githubRepoName.value}")
+          if(gitRemoteHost == "github.com"){
+            new URI(s"https://${githubOrg.value}.github.io/${githubRepoName.value}")
+          } else {
+            new URI(s"https://${gitRemoteHost.value}/pages/${githubOrg.value}/${githubRepoName.value}")
+          }
         } else {
           new URI(s"http://127.0.0.1:${previewFixedPort.value.getOrElse(1313)}")
         }
