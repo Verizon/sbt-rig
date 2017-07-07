@@ -40,6 +40,11 @@ object RigPlugin extends AutoPlugin {
     scoverage.ScoverageSbtPlugin
 
   override lazy val projectSettings = common.settings
+
+  // By making these build settings instead of project settings, we retain
+  // compatibility with the coverageOn and coverageOff aliases that some people
+  // will use.
+  override lazy val buildSettings = common.travisSettings ++ common.coverageSettings
 }
 
 import sbt._, Keys._
@@ -52,16 +57,17 @@ object common {
 
   def settings =
     compilationSettings ++
-    coverageSettings ++
     releaseSettings ++
-    publishingSettings ++ Seq(
-      isTravisBuild     := sys.env.get("TRAVIS").isDefined,
-      isTravisPR        := !sys.env.get("TRAVIS_PULL_REQUEST").forall(_.trim.toLowerCase == "false"),
-      travisRepoSlug    := sys.env.get("TRAVIS_REPO_SLUG"),
-      travisJobNumber   := sys.env.get("TRAVIS_JOB_NUMBER"),
-      travisBuildNumber := sys.env.get("TRAVIS_BUILD_NUMBER"),
-      travisCommit      := sys.env.get("TRAVIS_COMMIT")
-    )
+    publishingSettings
+
+  def travisSettings = Seq(
+    isTravisBuild     := sys.env.get("TRAVIS").isDefined,
+    isTravisPR        := !sys.env.get("TRAVIS_PULL_REQUEST").forall(_.trim.toLowerCase == "false"),
+    travisRepoSlug    := sys.env.get("TRAVIS_REPO_SLUG"),
+    travisJobNumber   := sys.env.get("TRAVIS_JOB_NUMBER"),
+    travisBuildNumber := sys.env.get("TRAVIS_BUILD_NUMBER"),
+    travisCommit      := sys.env.get("TRAVIS_COMMIT")
+  )
 
   def publishingSettings = Seq(
     publishMavenStyle := true,
@@ -146,7 +152,7 @@ object common {
     // Without this, scoverage shows up as a dependency in the POM file.
     // See https://github.com/scoverage/sbt-scoverage/issues/153.
     // This code was borrowed from https://github.com/mongodb/mongo-spark.
-    pomPostProcess := { (node: xml.Node) =>
+    pomPostProcess ~= { ppp => (node: xml.Node) =>
       new RuleTransformer(
         new RewriteRule {
           override def transform(node: xml.Node): Seq[xml.Node] = node match {
@@ -154,7 +160,7 @@ object common {
                 if e.label == "dependency" && e.child.exists(child => child.label == "groupId" && child.text == "org.scoverage") => Nil
             case _ => Seq(node)
           }
-        }).transform(node).head
+        }).transform(ppp(node)).head
     }
   )
 
