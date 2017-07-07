@@ -30,7 +30,7 @@ object ScalaCheckPlugin extends AutoPlugin {
   override lazy val projectSettings = Seq(
     scalaCheckVersion := "1.13.5",
     libraryDependencies ++= Seq(
-      "org.scalatest"  %% "scalatest"  % scalaCheckVersion.value  % "test"
+      "org.scalacheck"  %% "scalacheck"  % scalaCheckVersion.value  % "test"
     )
   )
 }
