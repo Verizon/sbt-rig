@@ -85,7 +85,7 @@ object common {
     credentials ++= (for {
       username <- sys.env.get("SONATYPE_USERNAME")
       password <- sys.env.get("SONATYPE_PASSWORD")
-      } yield Credentials(
+    } yield Credentials(
         "Sonatype Nexus Repository Manager",
         "oss.sonatype.org",
         username, password)).toSeq
@@ -135,7 +135,7 @@ object common {
         )
       }),
       scalacOptions in Test := (scalacOptions in Compile).value :+ "-language:reflectiveCalls"
-    )
+    ) ++ sys.env.get("TRAVIS_SCALA_VERSION").map(scalaVersion := _)
   }
 
   def coverageSettings = Seq(
@@ -192,9 +192,9 @@ object common {
         v.qualifier.forall(_.isEmpty) && v.subversions.size == 2
       ).getOrElse(sys.error(s"version $v does not match the expected pattern of x.y.z where x, y, and z are all integers."))
       st
-  })
+    })
 
-  val runTestWithCoverage = ReleaseStep(action = state1 => {
+  val runTestWithCoverage: ReleaseStep = ReleaseStep(action = state1 => {
     val extracted = Project.extract(state1)
     val thisRef = extracted.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
 
@@ -207,85 +207,50 @@ object common {
     state3
   })
 
-  // we do this step here to force a re-compilation of the code
-  // as we already know the tests have passed, but we dont want to
-  // roll the instrumented code into production.
-  // DOING THE NASTY SO YOU DONT HAVE TOO.
-  val runPackageBinaries = ReleaseStep(action = state1 => {
-    val ex1 = Project.extract(state1)
-    val thisRef = ex1.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
-    // println("A. >>>>>>>>>>>> " + (version in ThisBuild).get(ex1.structure.data))
-    // println("A.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex1.structure.data))
-    // println("A.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex1.structure.data))
+  /** Forcibly disable coverage on all projects. `coverageOff` just disables
+    * `coverageEnabled in ThisBuild``, but leaves coverage on projects
+    * explicitly opted in. This forcibly removes it, and should be run before we
+    * publish.
+    */
+  val turnOffCoverage = ReleaseStep { state =>
+    val ex = Project.extract(state)
+    reapply(ex.structure.allProjectRefs.map { proj =>
+      coverageEnabled in proj := false
+    }, state)}
 
-    // ex1.structure.allProjectRefs.foreach { proj =>
-    //   println("A1. >>>>>>>>>>>> " + (coverageEnabled in proj).get(ex1.structure.data))
-    // }
-
-    // this is a total hack, and only works because version in ThisBuild is
-    // the only thing we're changing outside of the reloaded state. This is
-    // not an advised approach, and i wish it was not needed, but cést la vie.
-    val updatedSettings = ex1.structure.allProjectRefs.map(proj
-      => coverageEnabled in proj := false) ++ Seq(
-      version in ThisBuild := (version in ThisBuild).get(ex1.structure.data).get,
-      scalaVersion := (scalaVersion in thisRef).get(ex1.structure.data).get,
-      publishTo := (publishTo in thisRef).get(ex1.structure.data).get
+  /** Some release steps can undo turning off coverage.  In the case of rig's
+   *  default settings, sonatypeOpen turns coverage back on.  This step turns
+   *  off coverage just before publishing, which will ensure that we don't
+   *  publish instrumented code
+   */
+  val publishArtifacsWithoutInstrumentation: ReleaseStep =
+    publishArtifacts.copy(
+      action = turnOffCoverage.action andThen publishArtifacts.action
     )
 
-    val newState = ex1.append(updatedSettings, state1)
-    val ex2 = Project.extract(newState)
-    // println("B. >>>>>>>>>>>> " + (version in ThisBuild).get(ex2.structure.data))
-    // println("B.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
-    // println("B.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex2.structure.data))
-    // ex2.structure.allProjectRefs.foreach { proj =>
-    //   println("B1. >>>>>>>>>>>> " + (coverageEnabled in proj).get(ex2.structure.data))
-    // }
+  /** Opens a sonatype repo.  We open one explicitly so concurrent builds in
+   *  the same organization to not publish to the same staging repo and
+   *  prematurely release.
+   */
+  val openSonatypeRepo: ReleaseStep = ReleaseStep { state =>
+    val ex = Project.extract(state)
+    val thisRef = ex.get(thisProjectRef)
+    val slug = (travisRepoSlug in thisRef).get(ex.structure.data).flatten
+    val jobNumber = (travisJobNumber in thisRef).get(ex.structure.data).flatten
+    val state1 = Command.process(s"sonatypeOpen ${slug.getOrElse("unknown")}-${jobNumber.getOrElse("0.0")}", state)
 
-    val state3 = releaseStepTaskAggregated((packageBin in Compile) in thisRef)(newState)
-    val ex3 = Project.extract(state3)
-    // println("C. >>>>>>>>>>>> " + (version in ThisBuild).get(ex3.structure.data))
-    // println("C.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex3.structure.data))
-    // println("C.publishTo >>>>>>>>>>>> " + (publishTo in thisRef).get(ex3.structure.data))
-
-    state3
-  })
-
-  val useTravisScalaVersion = ReleaseStep(action = state1 => {
     val ex1 = Project.extract(state1)
-    val thisRef = ex1.get(thisProjectRef) // this is needed to properly run tasks in all aggregated projects
+    val thisRef1 = ex1.get(thisProjectRef)
+    reapply(ex1.structure.allProjectRefs.flatMap { proj => Seq(
+      publishTo in proj := (publishTo in thisRef1).get(ex1.structure.data).get,
+      sonatypeStagingRepositoryProfile in proj := (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get
+    )}, state)
+  }
 
-    // println("X1.sonatypeRepo >>>>>>>>>>>> " +  (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get.repositoryId)
-
-
-    // TIM: This is so fucking hacky words cannot even begin to explain.
-    val verfun = (releaseVersion in thisRef).get(ex1.structure.data).get
-
-    val updatedSettings =
-      ex1.structure.allProjectRefs.map(proj => publishTo in proj := (publishTo in thisRef).get(ex1.structure.data).get) ++
-      ex1.structure.allProjectRefs.map(proj => sonatypeStagingRepositoryProfile in proj := (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get) ++
-      Seq(
-        version in ThisBuild := verfun((version in ThisBuild).get(ex1.structure.data).get),
-        scalaVersion := sys.env.get("TRAVIS_SCALA_VERSION").getOrElse((scalaVersion in thisRef).get(ex1.structure.data).get)
-      )
-
-    val state2 = ex1.append(updatedSettings, state1)
-    val ex2 = Project.extract(state2)
-
-    // println("X. >>>>>>>>>>>> " +  verfun((version in ThisBuild).get(ex2.structure.data).get))
-    // println("X2.sonatypeRepo >>>>>>>>>>>> " +  (sonatypeStagingRepositoryProfile in thisRef).get(ex2.structure.data).get.repositoryId)
-    // println("X.scala >>>>>>>>>>>> " + (scalaVersion in thisRef).get(ex2.structure.data))
-    // ex2.structure.allProjectRefs.foreach { proj =>
-    //   println("X.publishTo >>>>>>>>>>>> " + (publishTo in proj).get(ex2.structure.data).get)
-    // }
-
-    state2
-  })
-
-  val releaseAndClose = ReleaseStep(action = state1 => {
+  val releaseAndClose: ReleaseStep = ReleaseStep(action = state1 => {
     val ex1 = Project.extract(state1)
     val thisRef = ex1.get(thisProjectRef)
     val repoId = (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get.repositoryId
-    // println("X1.sonatypeRepo >>>>>>>>>>>> " + repoId )
 
     Command.process(s"sonatypeRelease $repoId", state1)
   })
@@ -309,31 +274,16 @@ object common {
     },
     releaseTagName := s"${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
     releaseProcess := Seq(
-      Seq(
+      Seq[ReleaseStep](
         checkEnvironment(travisRepoSlug.value, travisBuildNumber.value),
         checkSnapshotDependencies,
-        // ReleaseStep(action = Command.process("show scalaVersion", _)),
         inquireVersions,
         setReleaseVersion,
         checkReleaseVersion,
         tagRelease,
-        runTest,
-        runPackageBinaries,
-        // ReleaseStep(action = Command.process("show version", _)),
-        // ReleaseStep(action = Command.process("show publishTo", _)),
-        // ReleaseStep(action = Command.process("show scalaVersion", _)),
-        ReleaseStep(action = Command.process(s"sonatypeOpen ${travisRepoSlug.value.getOrElse("unknown")}-${travisJobNumber.value.getOrElse("0.0")}", _)),
-        // setReleaseVersion,
-        // ReleaseStep(action = Command.process("show version", _)),
-        // ReleaseStep(action = Command.process(s"show sonatypeStagingRepositoryProfile", _)),
-        // ReleaseStep(action = Command.process("show publishTo", _)),
-        useTravisScalaVersion, // terrible hack. `sonatypeOpen` seems to blow away `scalaVersion`
-        // ReleaseStep(action = Command.process("show version", _)),
-        // ReleaseStep(action = Command.process("show publishTo", _)),
-        // ReleaseStep(action = Command.process("show scalaVersion", _)),
-        // ReleaseStep(action = Command.process("show sonatypeStagingRepositoryProfile", _)),
-        publishArtifacts,
-        // ReleaseStep(action = Command.process("show sonatypeStagingRepositoryProfile", _)),
+        runTestWithCoverage,
+        openSonatypeRepo,
+        publishArtifacsWithoutInstrumentation,
         releaseAndClose
       ),
       // only job *.1 pushes tags, to avoid each independent job attempting to retag the same release
