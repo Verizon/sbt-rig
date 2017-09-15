@@ -145,14 +145,16 @@ object common {
       isTravisBuild.value
     },
     coverageHighlighting := {
-      isTravisBuild.value && scalaVersion.value.startsWith("2.11")
+      // https://github.com/scoverage/sbt-scoverage#highlighting
+      val VersionNumber((major +: minor +: patch +: _), _, _) = scalaVersion.value
+      import scala.math.Ordered.orderingToOrdered
+      ((major, minor, patch)) > ((2, 11, 1))
     }
   )
 
   import sbtrelease._
-  import sbtrelease.ReleasePlugin.autoImport._
+  import sbtrelease.ReleasePlugin.autoImport._, ReleasePlugin.runtimeVersion
   import sbtrelease.ReleaseStateTransformations._
-  import sbtrelease.Utilities._
 
   def checkEnvironment(slug: Option[String], bn: Option[String]) =
     ReleaseStep(action = st => {
@@ -250,7 +252,7 @@ object common {
         .orElse(Version(ver).map(_.withoutQualifier.string))
         .getOrElse(versionFormatError)
     },
-    releaseTagName := runtimeVersion.value // 'Round these parts, we don't add the "v" prefix
+    releaseTagName := runtimeVersion.value, // 'Round these parts, we don't add the "v" prefix
     releaseProcess := Seq(
       Seq[ReleaseStep](
         checkEnvironment(travisRepoSlug.value, travisBuildNumber.value),
