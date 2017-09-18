@@ -91,52 +91,8 @@ object common {
         username, password)).toSeq
   )
 
-  def compilationSettings = {
-    val flags = Seq(
-      "-deprecation",
-      "-encoding", "UTF-8",
-      "-unchecked",
-      "-feature",
-      "-language:implicitConversions",
-      "-language:higherKinds",
-      "-Ywarn-adapted-args",
-      "-Ywarn-dead-code",
-      "-Ywarn-inaccessible",
-      "-Xfatal-warnings",
-      "-Xfuture",
-      "-Xmax-classfile-name", (255 - 15).toString
-    )
-
-    Seq(
-      scalacOptions in Compile ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 10)) => flags ++ Seq("-Xlint", "-Ywarn-value-discard")
-        case Some((2, n)) if n >= 11 => flags ++ Seq(
-          "-Xlint:adapted-args",
-          "-Xlint:nullary-unit",
-          "-Xlint:inaccessible",
-          "-Xlint:nullary-override",
-          "-Xlint:missing-interpolator",
-          "-Xlint:doc-detached",
-          "-Xlint:private-shadow",
-          "-Xlint:type-parameter-shadow",
-          "-Xlint:poly-implicit-overload",
-          "-Xlint:option-implicit",
-          "-Xlint:delayedinit-select",
-          "-Xlint:by-name-right-associative",
-          "-Xlint:package-object-classes",
-          "-Xlint:unsound-match",
-          "-Xlint:stars-align"
-        ) ++ (
-          if(n >= 12) {
-            Seq("-Ypartial-unification")
-          } else {
-            Seq()
-          }
-        )
-      }),
-      scalacOptions in Test := (scalacOptions in Compile).value :+ "-language:reflectiveCalls"
-    ) ++ sys.env.get("TRAVIS_SCALA_VERSION").map(scalaVersion := _)
-  }
+  def compilationSettings =
+    sys.env.get("TRAVIS_SCALA_VERSION").toList.map(scalaVersion := _)
 
   def coverageSettings = Seq(
     coverageFailOnMinimum := false,
