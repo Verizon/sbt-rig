@@ -127,3 +127,13 @@ In addition, the following plugins are provided by `sbt-rig`, but are not explic
   </tbody>
 </table>
 
+## Migration notes
+
+### v5.0
+
+* Built for sbt-1.0.  Bump `sbt.version` in `project/build.properties` to at least `1.0.1`.
+* `scalacOptions` are no longer set, as they are unrelated to releasing software.  We recommend [sbt-tpolecat](https://github.com/DavidGregory084/sbt-tpolecat) for setting a reasonable set of compiler options for your version of Scala.
+* Coverage highlighting is now enabled by default above Scala 2.11.1
+* Unified `turnOffCoverage` and `publishArtifacsWithoutInstrumentation` [sic] release steps into `publishToSonatypeWithoutInstrumentation`.  If you did not customize the release steps previously, there is nothing new to do.
+* `watchSources` customization is removed, as we can no longer filter out the target directory.
+* Theoretically can be used without git if you don't use the DocsPlugin with sbt-ghpages, though I don't know anybody who has tried.
