@@ -190,7 +190,7 @@ object common {
     val thisRef = ex1.get(thisProjectRef)
     val repoId = (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get.repositoryId
     state.log.info(s"Closing staging repo ${repoId}")
-    releaseStepCommand(s"sonatypeDrop $repoId")(state)
+    releaseStepCommand(s"sonatypeRelease $repoId")(state)
   })
 
   import com.typesafe.sbt.SbtPgp.autoImport._, PgpKeys._
