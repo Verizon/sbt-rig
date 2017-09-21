@@ -167,7 +167,11 @@ object common {
         // As of sbt-sonatype-2.0, we're on our own to set this
         publishTo in proj := Some(MavenRepository(repo.repositoryId, sonatypeRepository.value + path)),
         // Never, ever, ever publish with instrumentation
-        coverageEnabled in proj := false
+        coverageEnabled in proj := false,
+        // This is good at test time, but adds runtime overhead.  It
+        // should be run where scoverage is run and not where it's
+        // not.
+        scalacOptions -= "-Xcheckinit"
       )
     }, state)
     publishArtifacts.action(state1)
