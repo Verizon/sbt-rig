@@ -41,24 +41,25 @@ sonatypeProfileName := "io.verizon"
 
 pomPostProcess := { identity }
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.3"
 
-sbtVersion in Global := "1.0.1"
+sbtVersion in Global := "1.0.2"
 
 scalaCompilerBridgeSource := {
   val sv = appConfiguration.value.provider.id.version
     ("org.scala-sbt" % "compiler-interface" % sv % "component").sources
 }
 
-addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo" % "0.7.0")
-addSbtPlugin("com.eed3si9n"      % "sbt-unidoc"    % "0.4.1")
-addSbtPlugin("com.github.gseitz" % "sbt-release"   % "1.0.6")
-addSbtPlugin("com.jsuereth"      % "sbt-pgp"       % "1.1.0")
-addSbtPlugin("com.timushev.sbt"  % "sbt-updates"   % "0.3.1")
-addSbtPlugin("com.typesafe.sbt"  % "sbt-ghpages"   % "0.6.2")
-addSbtPlugin("com.typesafe.sbt"  % "sbt-site"      % "1.3.0")
-addSbtPlugin("org.scoverage"     % "sbt-scoverage" % "1.5.1")
-addSbtPlugin("org.tpolecat"      % "tut-plugin"    % "0.6.0")
-addSbtPlugin("org.xerial.sbt"    % "sbt-sonatype"  % "2.0")
+addSbtPlugin("com.eed3si9n"              % "sbt-buildinfo" % "0.7.0")
+addSbtPlugin("com.eed3si9n"              % "sbt-unidoc"    % "0.4.1")
+addSbtPlugin("com.github.gseitz"         % "sbt-release"   % "1.0.6")
+addSbtPlugin("com.jsuereth"              % "sbt-pgp"       % "1.1.0")
+addSbtPlugin("com.timushev.sbt"          % "sbt-updates"   % "0.3.1")
+addSbtPlugin("com.typesafe.sbt"          % "sbt-ghpages"   % "0.6.2")
+addSbtPlugin("com.typesafe.sbt"          % "sbt-site"      % "1.3.0")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"  % "0.1.3")
+addSbtPlugin("org.scoverage"             % "sbt-scoverage" % "1.5.1")
+addSbtPlugin("org.tpolecat"              % "tut-plugin"    % "0.6.0")
+addSbtPlugin("org.xerial.sbt"            % "sbt-sonatype"  % "2.0")
 
 addCommandAlias("validate", ";test;scripted")

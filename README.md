@@ -132,7 +132,8 @@ In addition, the following plugins are provided by `sbt-rig`, but are not explic
 ### v5.0
 
 * Built for sbt-1.0.  Bump `sbt.version` in `project/build.properties` to at least `1.0.1`.
-* `scalacOptions` are no longer set, as they are unrelated to releasing software.  We recommend [sbt-tpolecat](https://github.com/DavidGregory084/sbt-tpolecat) for setting a reasonable set of compiler options for your version of Scala.
+* `scalacOptions` are now set by [sbt-tpolecat](https://github.com/DavidGregory084/sbt-tpolecat), a stricter but better set than was available in sbt-rig-4.x.  Opt out of disagreeable flags with `scalacOptions -= ...`.
+* Uses [sbt-partial-unification](https://github.com/fiadliel/sbt-partial-unification).  If on Scala 2.10, upgrade to at least Scala 2.10.6.  If on Scala 2.11, upgrade to at least Scala 2.11.8.
 * Coverage highlighting is now enabled by default above Scala 2.11.1
 * Unified `turnOffCoverage` and `publishArtifacsWithoutInstrumentation` [sic] release steps into `publishToSonatypeWithoutInstrumentation`.  If you did not customize the release steps previously, there is nothing new to do.
 * `watchSources` customization is removed, as we can no longer filter out the target directory.

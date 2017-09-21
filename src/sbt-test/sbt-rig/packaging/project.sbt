@@ -1,6 +1,6 @@
 
 
-scalaVersion in Global  := "2.11.7"
+scalaVersion in Global  := "2.11.11"
 
 resolvers in Global += {
   val testRepoUri = baseDirectory.value.toURI + "/repo"
