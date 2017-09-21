@@ -91,83 +91,26 @@ object common {
         username, password)).toSeq
   )
 
-  def compilationSettings = {
-    val flags = Seq(
-      "-deprecation",
-      "-encoding", "UTF-8",
-      "-unchecked",
-      "-feature",
-      "-language:implicitConversions",
-      "-language:higherKinds",
-      "-Ywarn-adapted-args",
-      "-Ywarn-dead-code",
-      "-Ywarn-inaccessible",
-      "-Xfatal-warnings",
-      "-Xfuture",
-      "-Xmax-classfile-name", (255 - 15).toString
-    )
-
-    Seq(
-      scalacOptions in Compile ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, 10)) => flags ++ Seq("-Xlint", "-Ywarn-value-discard")
-        case Some((2, n)) if n >= 11 => flags ++ Seq(
-          "-Xlint:adapted-args",
-          "-Xlint:nullary-unit",
-          "-Xlint:inaccessible",
-          "-Xlint:nullary-override",
-          "-Xlint:missing-interpolator",
-          "-Xlint:doc-detached",
-          "-Xlint:private-shadow",
-          "-Xlint:type-parameter-shadow",
-          "-Xlint:poly-implicit-overload",
-          "-Xlint:option-implicit",
-          "-Xlint:delayedinit-select",
-          "-Xlint:by-name-right-associative",
-          "-Xlint:package-object-classes",
-          "-Xlint:unsound-match",
-          "-Xlint:stars-align"
-        ) ++ (
-          if(n >= 12) {
-            Seq("-Ypartial-unification")
-          } else {
-            Seq()
-          }
-        )
-      }),
-      scalacOptions in Test := (scalacOptions in Compile).value :+ "-language:reflectiveCalls"
-    ) ++ sys.env.get("TRAVIS_SCALA_VERSION").map(scalaVersion := _)
-  }
+  def compilationSettings =
+    sys.env.get("TRAVIS_SCALA_VERSION").toList.map(scalaVersion := _)
 
   def coverageSettings = Seq(
-    /* don't delete the coverage data, so we have it to upload later */
-    // cleanKeepFiles += crossTarget.value / "scoverage-data",
     coverageFailOnMinimum := false,
     coverageEnabled := {
       /* if we're running on travis, use coverage, don't otherwise */
       isTravisBuild.value
     },
     coverageHighlighting := {
-      isTravisBuild.value && scalaVersion.value.startsWith("2.11")
-    },
-    // Without this, scoverage shows up as a dependency in the POM file.
-    // See https://github.com/scoverage/sbt-scoverage/issues/153.
-    // This code was borrowed from https://github.com/mongodb/mongo-spark.
-    pomPostProcess ~= { ppp => (node: xml.Node) =>
-      new RuleTransformer(
-        new RewriteRule {
-          override def transform(node: xml.Node): Seq[xml.Node] = node match {
-            case e: xml.Elem
-                if e.label == "dependency" && e.child.exists(child => child.label == "groupId" && child.text == "org.scoverage") => Nil
-            case _ => Seq(node)
-          }
-        }).transform(ppp(node)).head
+      // https://github.com/scoverage/sbt-scoverage#highlighting
+      val VersionNumber((major +: minor +: patch +: _), _, _) = scalaVersion.value
+      import scala.math.Ordered.orderingToOrdered
+      ((major, minor, patch)) > ((2, 11, 1))
     }
   )
 
   import sbtrelease._
-  import sbtrelease.ReleasePlugin.autoImport._
+  import sbtrelease.ReleasePlugin.autoImport._, ReleasePlugin.runtimeVersion
   import sbtrelease.ReleaseStateTransformations._
-  import sbtrelease.Utilities._
 
   def checkEnvironment(slug: Option[String], bn: Option[String]) =
     ReleaseStep(action = st => {
@@ -186,12 +129,12 @@ object common {
     check = { st =>
       val extracted = Project.extract(st)
       val v = extracted.get(Keys.version)
-      val rf = extracted.get(releaseVersion)
+      val (st1, rf) = extracted.runTask(releaseVersion, st)
       val actualVersion = rf(v)
       Version(actualVersion).filter(v =>
         v.qualifier.forall(_.isEmpty) && v.subversions.size == 2
       ).getOrElse(sys.error(s"version $v does not match the expected pattern of x.y.z where x, y, and z are all integers."))
-      st
+      st1
     })
 
   val runTestWithCoverage: ReleaseStep = ReleaseStep(action = state1 => {
@@ -207,26 +150,28 @@ object common {
     state3
   })
 
-  /** Forcibly disable coverage on all projects. `coverageOff` just disables
-    * `coverageEnabled in ThisBuild``, but leaves coverage on projects
-    * explicitly opted in. This forcibly removes it, and should be run before we
-    * publish.
+  /** Forcibly turns off coverage on all projects, sets publishTo to the
+    * open sonatype repository, and invokes `publishArtifacts`.
     */
-  val turnOffCoverage = ReleaseStep { state =>
+  val publishToSonatypeWithoutInstrumentation: ReleaseStep = ReleaseStep { state =>
     val ex = Project.extract(state)
-    reapply(ex.structure.allProjectRefs.map { proj =>
-      coverageEnabled in proj := false
-    }, state)}
-
-  /** Some release steps can undo turning off coverage.  In the case of rig's
-   *  default settings, sonatypeOpen turns coverage back on.  This step turns
-   *  off coverage just before publishing, which will ensure that we don't
-   *  publish instrumented code
-   */
-  val publishArtifacsWithoutInstrumentation: ReleaseStep =
-    publishArtifacts.copy(
-      action = turnOffCoverage.action andThen publishArtifacts.action
-    )
+    val thisRef = ex.get(thisProjectRef)
+    // This does too much, but each call to reapply discards the rest of the release
+    // settings.  We've apparently only got one bite at this apple.
+    val state1 = reapply(ex.structure.allProjectRefs.flatMap { proj =>
+      val repo = (sonatypeStagingRepositoryProfile in thisRef).get(ex.structure.data).get
+      val path = "/staging/deployByRepositoryId/"+repo.repositoryId
+      // This disappears if we don't propagate it. :(
+      (sonatypeStagingRepositoryProfile in proj := repo) +:
+      Seq(
+        // As of sbt-sonatype-2.0, we're on our own to set this
+        publishTo in proj := Some(MavenRepository(repo.repositoryId, sonatypeRepository.value + path)),
+        // Never, ever, ever publish with instrumentation
+        coverageEnabled in proj := false
+      )
+    }, state)
+    publishArtifacts.action(state1)
+  }
 
   /** Opens a sonatype repo.  We open one explicitly so concurrent builds in
    *  the same organization to not publish to the same staging repo and
@@ -237,31 +182,22 @@ object common {
     val thisRef = ex.get(thisProjectRef)
     val slug = (travisRepoSlug in thisRef).get(ex.structure.data).flatten
     val jobNumber = (travisJobNumber in thisRef).get(ex.structure.data).flatten
-    val state1 = Command.process(s"sonatypeOpen ${slug.getOrElse("unknown")}-${jobNumber.getOrElse("0.0")}", state)
-
-    val ex1 = Project.extract(state1)
-    val thisRef1 = ex1.get(thisProjectRef)
-    reapply(ex1.structure.allProjectRefs.flatMap { proj => Seq(
-      publishTo in proj := (publishTo in thisRef1).get(ex1.structure.data).get,
-      sonatypeStagingRepositoryProfile in proj := (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get
-    )}, state)
+    releaseStepCommand(s"sonatypeOpen ${slug.getOrElse("unknown")}-${jobNumber.getOrElse("0.0")}")(state)
   }
 
-  val releaseAndClose: ReleaseStep = ReleaseStep(action = state1 => {
-    val ex1 = Project.extract(state1)
+  val releaseAndClose: ReleaseStep = ReleaseStep(action = state => {
+    val ex1 = Project.extract(state)
     val thisRef = ex1.get(thisProjectRef)
     val repoId = (sonatypeStagingRepositoryProfile in thisRef).get(ex1.structure.data).get.repositoryId
-
-    Command.process(s"sonatypeRelease $repoId", state1)
+    state.log.info(s"Closing staging repo ${repoId}")
+    releaseStepCommand(s"sonatypeRelease $repoId")(state)
   })
 
   import com.typesafe.sbt.SbtPgp.autoImport._, PgpKeys._
 
   def releaseSettings = Seq(
-    sonatypeStagingRepositoryProfile := Sonatype.StagingRepositoryProfile("unknown","unknown","unknown","unknown","unknown"),
     releasePublishArtifactsAction := publishSigned.value,
     releaseCrossBuild := false,
-    releaseVcs := Some(new GitX(baseDirectory.value)), // only work with Git, sorry SVN people.
     releaseVersion := { ver =>
       travisBuildNumber.value.orElse(sys.env.get("BUILD_NUMBER"))
         .flatMap(s => try Option(s.toInt) catch { case _: NumberFormatException => Option.empty[Int] })
@@ -272,7 +208,7 @@ object common {
         .orElse(Version(ver).map(_.withoutQualifier.string))
         .getOrElse(versionFormatError)
     },
-    releaseTagName := s"${if (releaseUseGlobalVersion.value) (version in ThisBuild).value else version.value}",
+    releaseTagName := runtimeVersion.value, // 'Round these parts, we don't add the "v" prefix
     releaseProcess := Seq(
       Seq[ReleaseStep](
         checkEnvironment(travisRepoSlug.value, travisBuildNumber.value),
@@ -283,8 +219,8 @@ object common {
         tagRelease,
         runTestWithCoverage,
         openSonatypeRepo,
-        publishArtifacsWithoutInstrumentation,
-        releaseAndClose
+        publishToSonatypeWithoutInstrumentation,
+        releaseAndClose,
       ),
       // only job *.1 pushes tags, to avoid each independent job attempting to retag the same release
       travisJobNumber.value

@@ -87,12 +87,12 @@ object DocsPlugin extends AutoPlugin { self =>
       preStageSiteDirectory := sourceDirectory.value / "hugo",
       siteStageDirectory := target.value / "site-stage",
       sourceDirectory in Hugo := siteStageDirectory.value,
-      watchSources := {
-        // nasty hack to remove the target directory from watched sources
-        watchSources.value
-          .filterNot(_.getAbsolutePath.startsWith(
-            target.value.getAbsolutePath))
-      },
+      // watchSources := {
+      //   // nasty hack to remove the target directory from watched sources
+      //   watchSources.value
+      //     .filterNot(_.getAbsolutePath.startsWith(
+      //       target.value.getAbsolutePath))
+      // },
       copySiteToStage := {
         streams.value.log.debug(s"copying ${preStageSiteDirectory.value} to ${siteStageDirectory.value}")
 
