@@ -159,13 +159,17 @@ object common {
     // This does too much, but each call to reapply discards the rest of the release
     // settings.  We've apparently only got one bite at this apple.
     val state1 = reapply(ex.structure.allProjectRefs.flatMap { proj =>
-      val repo = (sonatypeStagingRepositoryProfile in thisRef).get(ex.structure.data).get
-      val path = "/staging/deployByRepositoryId/"+repo.repositoryId
-      // This disappears if we don't propagate it. :(
-      (sonatypeStagingRepositoryProfile in proj := repo) +:
+      val repo = (sonatypeStagingRepositoryProfile in thisRef).get(ex.structure.data)
+      repo.fold(Seq.empty[Setting[_]]) { r =>
+        val path = s"/staging/deployByRepositoryId/${r.repositoryId}"
+        Seq(
+          // This disappears if we don't propagate it. :(
+          (sonatypeStagingRepositoryProfile in proj := r),
+          // As of sbt-sonatype-2.0, we're on our own to set this
+          publishTo in proj := Some(MavenRepository(r.repositoryId, sonatypeRepository.value + path))
+        )
+      } ++
       Seq(
-        // As of sbt-sonatype-2.0, we're on our own to set this
-        publishTo in proj := Some(MavenRepository(repo.repositoryId, sonatypeRepository.value + path)),
         // Never, ever, ever publish with instrumentation
         coverageEnabled in proj := false,
         // This is good at test time, but adds runtime overhead.  It
