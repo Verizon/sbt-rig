@@ -41,9 +41,9 @@ sonatypeProfileName := "io.verizon"
 
 pomPostProcess := { identity }
 
-scalaVersion := "2.12.3"
+scalaVersion := "2.12.6"
 
-sbtVersion in Global := "1.0.2"
+sbtVersion in Global := "1.1.6"
 
 scalaCompilerBridgeSource := {
   val sv = appConfiguration.value.provider.id.version
