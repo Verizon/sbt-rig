@@ -60,6 +60,6 @@ addSbtPlugin("com.typesafe.sbt"          % "sbt-site"      % "1.3.0")
 addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"  % "0.1.3")
 addSbtPlugin("org.scoverage"             % "sbt-scoverage" % "1.5.1")
 addSbtPlugin("org.tpolecat"              % "tut-plugin"    % "0.6.0")
-addSbtPlugin("org.xerial.sbt"            % "sbt-sonatype"  % "2.0")
+addSbtPlugin("org.xerial.sbt"            % "sbt-sonatype"  % "2.3")
 
 addCommandAlias("validate", ";test;scripted")
