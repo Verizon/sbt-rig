@@ -41,9 +41,9 @@ sonatypeProfileName := "io.verizon"
 
 pomPostProcess := { identity }
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.8"
 
-sbtVersion in Global := "1.1.6"
+sbtVersion in Global := "1.2.8"
 
 scalaCompilerBridgeSource := {
   val sv = appConfiguration.value.provider.id.version
@@ -57,7 +57,7 @@ addSbtPlugin("com.jsuereth"              % "sbt-pgp"       % "1.1.0")
 addSbtPlugin("com.timushev.sbt"          % "sbt-updates"   % "0.3.1")
 addSbtPlugin("com.typesafe.sbt"          % "sbt-ghpages"   % "0.6.2")
 addSbtPlugin("com.typesafe.sbt"          % "sbt-site"      % "1.3.0")
-addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"  % "0.1.3")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"  % "0.1.5")
 addSbtPlugin("org.scoverage"             % "sbt-scoverage" % "1.5.1")
 addSbtPlugin("org.tpolecat"              % "tut-plugin"    % "0.6.0")
 addSbtPlugin("org.xerial.sbt"            % "sbt-sonatype"  % "2.0")
